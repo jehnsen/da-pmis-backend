@@ -117,3 +117,31 @@ folowing the best and recomended coding design patterns in laravel like service-
 pattern with repositoryinterface. Use Request (ex. StoreProjectRequesr, UpdateProjectRequest etc.),
 Resource, 
 
+
+## continue...
+
+1. Create Service classes for all modules - on progress
+
+   ✅ ProjectService.php
+   ✅ ProgressReportService.php
+   ✅ CropProductionService.php
+   ✅ LivestockStatisticService.php
+   ✅ NewsUpdateService.php
+   ✅ DocumentService.php
+   ✅ ContactInquiryService.php
+   ✅ NewsletterSubscriptionService.php
+   ✅ AuditLogService.php
+
+2. Create Request validation classes for all modules
+
+3. Create Resource classes for API responses
+
+4. Create Controllers for all modules
+
+5. Create ServiceProviders and register bindings
+
+6. Create AuditLog trait/middleware
+
+7. Update routes/api.php with all new routes
+
+8. Update bootstrap/providers.php with all ServiceProviders
