@@ -19,6 +19,10 @@ class NewsletterSubscription extends Model
         'updated_at' => 'datetime',
     ];
 
+    protected $attributes = [
+        'is_active' => true,
+    ];
+
     /**
      * Scope for active subscriptions
      */

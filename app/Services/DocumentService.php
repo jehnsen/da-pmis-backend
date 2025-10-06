@@ -12,9 +12,9 @@ class DocumentService
     {
     }
 
-    public function list(int $perPage = 15): LengthAwarePaginator|Collection
+    public function list(int $perPage = 15, array $filters = []): LengthAwarePaginator|Collection
     {
-        return $this->repo->all();
+        return $this->repo->paginate($perPage, $filters);
     }
 
     public function create(array $data)
@@ -37,9 +37,19 @@ class DocumentService
         return $this->repo->delete($id);
     }
 
+    public function search(string $query)
+    {
+        return $this->repo->search($query);
+    }
+
     public function getByType(string $type)
     {
         return $this->repo->getByType($type);
+    }
+
+    public function syncCategories(int $documentId, array $categoryIds)
+    {
+        return $this->repo->syncCategories($documentId, $categoryIds);
     }
 
     public function getByCategory(int $categoryId)

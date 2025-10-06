@@ -19,6 +19,10 @@ class ContactInquiry extends Model
         'updated_at' => 'datetime',
     ];
 
+    protected $attributes = [
+        'status' => 'pending',
+    ];
+
     /**
      * Scope for pending inquiries
      */

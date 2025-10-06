@@ -14,9 +14,26 @@ class ContactInquiryRepository implements ContactInquiryRepositoryInterface
         $this->model = $model;
     }
 
-    public function all()
+    public function all(array $filters = [])
     {
-        return $this->model->orderBy('created_at', 'desc')->get();
+        $query = $this->model->query();
+
+        if (isset($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        return $query->orderBy('created_at', 'desc')->get();
+    }
+
+    public function paginate(int $perPage = 15, array $filters = [])
+    {
+        $query = $this->model->query();
+
+        if (isset($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        return $query->orderBy('created_at', 'desc')->paginate($perPage);
     }
 
     public function find($id)
@@ -32,15 +49,21 @@ class ContactInquiryRepository implements ContactInquiryRepositoryInterface
     public function update($id, array $data)
     {
         $inquiry = $this->find($id);
-        $inquiry->update($data);
-        return $inquiry;
+        if ($inquiry) {
+            $inquiry->update($data);
+            return $inquiry->fresh();
+        }
+        return null;
     }
 
     public function delete($id)
     {
         $inquiry = $this->find($id);
-        $inquiry->delete();
-        return $inquiry;
+        if ($inquiry) {
+            $inquiry->delete();
+            return $inquiry;
+        }
+        return null;
     }
 
     public function getPending()

@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description')->nullable();
-            $table->string('file_path');
-            $table->enum('document_type', ['report', 'whitepaper', 'policy', 'guideline', 'other'])->default('other');
+            $table->string('file_path', 500);
+            $table->string('document_type')->default('PDF'); // PDF, DOC, DOCX, XLS, XLSX, etc.
             $table->date('published_date')->nullable();
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
             $table->softDeletes();

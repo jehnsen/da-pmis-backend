@@ -12,28 +12,32 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('inventories', function (Blueprint $t) {
-            // Basic info
-            $t->string('equipment_name')->after('id');                 // from UI
-            $t->string('equipment_type')->nullable()->after('equipment_name');
-            $t->string('category')->nullable()->change();              // keep if already exists
-            $t->unsignedInteger('quantity')->default(0)->after('unit'); // UI "Quantity"
-            $t->string('condition')->default('Good')->change();        // UI condition dropdown
+            $t->id();
 
-            // Location (link to school if you have School model)
-            $t->foreignId('school_id')->nullable()->after('location')
-              ->constrained('schools')->nullOnDelete();                // optional FK
-            $t->string('location')->nullable()->change();              // keep free-text fallback
+            // Basic info
+            $t->string('equipment_name');
+            $t->string('equipment_type')->nullable();
+            $t->string('category')->nullable();
+            $t->unsignedInteger('quantity')->default(0);
+            $t->string('unit')->nullable(); // unit of measurement
+            $t->string('condition')->default('Good'); // Good/Fair/Poor
+
+            // Location
+            $t->string('location')->nullable();
+            $t->foreignId('school_id')->nullable()->constrained('schools')->nullOnDelete();
 
             // Technical details
-            $t->string('serial_number')->nullable()->after('location');
-            $t->date('purchase_date')->nullable()->after('serial_number');
-            $t->string('warranty_period')->nullable()->after('purchase_date'); // e.g., "2 years"
-            $t->decimal('purchase_cost', 12, 2)->nullable()->after('warranty_period');
-            $t->string('supplier')->nullable()->after('purchase_cost');
+            $t->string('serial_number')->nullable();
+            $t->date('purchase_date')->nullable();
+            $t->string('warranty_period')->nullable(); // e.g., "2 years"
+            $t->decimal('purchase_cost', 12, 2)->nullable();
+            $t->string('supplier')->nullable();
 
             // Additional info
-            $t->longText('description')->nullable()->after('supplier');
-            $t->boolean('is_qrf_funded')->default(false)->after('description'); // checkbox
+            $t->longText('description')->nullable();
+            $t->boolean('is_qrf_funded')->default(false);
+
+            $t->timestamps();
         });
     }
 

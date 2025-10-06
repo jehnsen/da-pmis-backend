@@ -4,7 +4,7 @@ namespace App\Interfaces;
 
 interface NewsletterSubscriptionRepositoryInterface
 {
-    public function all();
+    public function all(array $filters = []);
 
     public function find($id);
 
@@ -14,9 +14,9 @@ interface NewsletterSubscriptionRepositoryInterface
 
     public function delete($id);
 
+    public function paginate(int $perPage = 15, array $filters = []);
+
     public function getActive();
 
-    public function subscribe($email);
-
-    public function unsubscribe($email);
+    public function findByEmail(string $email);
 }

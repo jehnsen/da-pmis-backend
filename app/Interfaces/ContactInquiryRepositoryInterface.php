@@ -4,7 +4,7 @@ namespace App\Interfaces;
 
 interface ContactInquiryRepositoryInterface
 {
-    public function all();
+    public function all(array $filters = []);
 
     public function find($id);
 
@@ -13,6 +13,8 @@ interface ContactInquiryRepositoryInterface
     public function update($id, array $data);
 
     public function delete($id);
+
+    public function paginate(int $perPage = 15, array $filters = []);
 
     public function getPending();
 

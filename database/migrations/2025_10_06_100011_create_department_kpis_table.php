@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('name');
             $table->decimal('target_value', 15, 2)->nullable();
             $table->decimal('current_value', 15, 2)->default(0);
-            $table->string('unit')->nullable();
+            $table->string('unit', 50);
             $table->year('fiscal_year');
             $table->timestamps();
 

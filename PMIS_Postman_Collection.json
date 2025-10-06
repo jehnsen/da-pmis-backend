@@ -1,0 +1,967 @@
+{
+	"info": {
+		"_postman_id": "da-caraga-pmis-2025",
+		"name": "DA-CARAGA PMIS API",
+		"description": "Complete API collection for Department of Agriculture - CARAGA Region Performance Management Information System (PMIS)\n\n**Default Login:**\n- Username: admin\n- Password: Password123!\n\n**Base URL:** http://localhost:8000/api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('access_token', jsonData.token);",
+									"    pm.environment.set('access_token', jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"Password123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "login"]
+						},
+						"description": "Login to get authentication token"
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/logout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "logout"]
+						},
+						"description": "Logout and invalidate token"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Projects",
+			"item": [
+				{
+					"name": "Get All Projects (Public)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projects?per_page=15&department_id=&project_status_id=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Items per page"
+								},
+								{
+									"key": "department_id",
+									"value": "",
+									"description": "Filter by department"
+								},
+								{
+									"key": "project_status_id",
+									"value": "",
+									"description": "Filter by status"
+								}
+							]
+						},
+						"description": "Get all projects with pagination and filters (public view - limited data)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Projects (Authenticated)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projects?per_page=15",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15"
+								}
+							]
+						},
+						"description": "Get all projects (authenticated - full data including budget)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Project by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projects/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1"]
+						},
+						"description": "Get specific project by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Project",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"New Agricultural Project\",\n    \"description\": \"Detailed project description\",\n    \"department_id\": 1,\n    \"project_type_id\": 1,\n    \"project_status_id\": 1,\n    \"budget\": 50000000.00,\n    \"start_date\": \"2025-01-01\",\n    \"end_date\": \"2025-12-31\",\n    \"location_lat\": 8.9475,\n    \"location_lng\": 125.5283,\n    \"is_public\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/projects",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects"]
+						},
+						"description": "Create new project (requires authentication)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Project",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated Project Title\",\n    \"description\": \"Updated description\",\n    \"project_status_id\": 2,\n    \"budget\": 60000000.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/projects/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1"]
+						},
+						"description": "Update existing project"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Project",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projects/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1"]
+						},
+						"description": "Delete project (soft delete)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Progress Reports",
+			"item": [
+				{
+					"name": "Get All Progress Reports",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/progress-reports?project_id=&fiscal_year=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "progress-reports"],
+							"query": [
+								{
+									"key": "project_id",
+									"value": "",
+									"description": "Filter by project"
+								},
+								{
+									"key": "fiscal_year",
+									"value": "",
+									"description": "Filter by year"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Progress Report by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/progress-reports/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "progress-reports", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Progress Report",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"project_id\": 1,\n    \"report_date\": \"2025-03-31\",\n    \"period\": \"Q1 2025\",\n    \"fiscal_year\": 2025,\n    \"summary\": \"Project progress summary for Q1\",\n    \"achievements\": \"Key achievements and milestones reached\",\n    \"challenges\": \"Challenges encountered during the period\",\n    \"recommendations\": \"Recommendations for improvement\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/progress-reports",
+							"host": ["{{base_url}}"],
+							"path": ["api", "progress-reports"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Progress Report",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"summary\": \"Updated summary\",\n    \"achievements\": \"Updated achievements\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/progress-reports/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "progress-reports", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Progress Report",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/progress-reports/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "progress-reports", "1"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Agricultural Data",
+			"item": [
+				{
+					"name": "Crop Production",
+					"item": [
+						{
+							"name": "Get All Crop Production",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/crop-production?region_id=&crop_name=&fiscal_year=",
+									"host": ["{{base_url}}"],
+									"path": ["api", "crop-production"],
+									"query": [
+										{
+											"key": "region_id",
+											"value": ""
+										},
+										{
+											"key": "crop_name",
+											"value": ""
+										},
+										{
+											"key": "fiscal_year",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Crop Production by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/crop-production/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "crop-production", "1"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Crop Production",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"region_id\": 1,\n    \"crop_name\": \"Rice\",\n    \"production_volume\": 180000.50,\n    \"unit\": \"metric tons\",\n    \"harvest_date\": \"2025-03-15\",\n    \"fiscal_year\": 2025\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/crop-production",
+									"host": ["{{base_url}}"],
+									"path": ["api", "crop-production"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Crop Production",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"production_volume\": 185000.00\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/crop-production/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "crop-production", "1"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Crop Production",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/crop-production/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "crop-production", "1"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Livestock Statistics",
+					"item": [
+						{
+							"name": "Get All Livestock Statistics",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/livestock-statistics?region_id=&livestock_type=&fiscal_year=",
+									"host": ["{{base_url}}"],
+									"path": ["api", "livestock-statistics"],
+									"query": [
+										{
+											"key": "region_id",
+											"value": ""
+										},
+										{
+											"key": "livestock_type",
+											"value": ""
+										},
+										{
+											"key": "fiscal_year",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Livestock Statistics by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/livestock-statistics/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "livestock-statistics", "1"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Livestock Statistics",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"region_id\": 1,\n    \"livestock_type\": \"Cattle\",\n    \"population\": 95000,\n    \"unit\": \"heads\",\n    \"recorded_date\": \"2025-03-31\",\n    \"fiscal_year\": 2025\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/livestock-statistics",
+									"host": ["{{base_url}}"],
+									"path": ["api", "livestock-statistics"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Livestock Statistics",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"population\": 98000\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/livestock-statistics/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "livestock-statistics", "1"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Livestock Statistics",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/livestock-statistics/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "livestock-statistics", "1"]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "News & Documents",
+			"item": [
+				{
+					"name": "News Updates",
+					"item": [
+						{
+							"name": "Get All News",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/news?is_featured=",
+									"host": ["{{base_url}}"],
+									"path": ["api", "news"],
+									"query": [
+										{
+											"key": "is_featured",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get News by ID",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/news/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "news", "1"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create News",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \"New Agricultural Initiative Launched\",\n    \"content\": \"Full article content here...\",\n    \"image_url\": \"/storage/news/image.jpg\",\n    \"published_at\": \"2025-10-06 10:00:00\",\n    \"is_featured\": true\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/news",
+									"host": ["{{base_url}}"],
+									"path": ["api", "news"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update News",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \"Updated Title\",\n    \"is_featured\": false\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/news/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "news", "1"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete News",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/news/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "news", "1"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Documents",
+					"item": [
+						{
+							"name": "Get All Documents",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/documents?document_type=",
+									"host": ["{{base_url}}"],
+									"path": ["api", "documents"],
+									"query": [
+										{
+											"key": "document_type",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Document by ID",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/documents/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "documents", "1"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Document",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \"Annual Report 2025\",\n    \"description\": \"Comprehensive annual report\",\n    \"file_path\": \"/storage/documents/report-2025.pdf\",\n    \"document_type\": \"PDF\",\n    \"published_date\": \"2025-12-31\",\n    \"categories\": [1, 2]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/documents",
+									"host": ["{{base_url}}"],
+									"path": ["api", "documents"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Document",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \"Updated Document Title\",\n    \"categories\": [1, 3]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/documents/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "documents", "1"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Document",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/documents/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "documents", "1"]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "User Engagement",
+			"item": [
+				{
+					"name": "Contact Inquiries",
+					"item": [
+						{
+							"name": "Get All Contact Inquiries",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/contact-inquiries?status=",
+									"host": ["{{base_url}}"],
+									"path": ["api", "contact-inquiries"],
+									"query": [
+										{
+											"key": "status",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Submit Contact Inquiry (Public)",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Juan Dela Cruz\",\n    \"email\": \"juan@example.com\",\n    \"subject\": \"Inquiry about rice program\",\n    \"message\": \"I would like to know more about the hybrid rice program...\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/contact-inquiries",
+									"host": ["{{base_url}}"],
+									"path": ["api", "contact-inquiries"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Contact Inquiry Status",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"status\": \"resolved\",\n    \"response\": \"Thank you for your inquiry. Here is the information...\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/contact-inquiries/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "contact-inquiries", "1"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Contact Inquiry",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/contact-inquiries/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "contact-inquiries", "1"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Newsletter Subscriptions",
+					"item": [
+						{
+							"name": "Get All Newsletter Subscriptions",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/newsletter?is_active=",
+									"host": ["{{base_url}}"],
+									"path": ["api", "newsletter"],
+									"query": [
+										{
+											"key": "is_active",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Subscribe to Newsletter (Public)",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"subscriber@example.com\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/newsletter",
+									"host": ["{{base_url}}"],
+									"path": ["api", "newsletter"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Newsletter Subscription",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"is_active\": false\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/newsletter/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "newsletter", "1"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Newsletter Subscription",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/newsletter/1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "newsletter", "1"]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Audit Logs",
+			"item": [
+				{
+					"name": "Get All Audit Logs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/audit-logs?user_id=&action=&model_type=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "audit-logs"],
+							"query": [
+								{
+									"key": "user_id",
+									"value": "",
+									"description": "Filter by user"
+								},
+								{
+									"key": "action",
+									"value": "",
+									"description": "Filter by action (created, updated, deleted)"
+								},
+								{
+									"key": "model_type",
+									"value": "",
+									"description": "Filter by model type"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Audit Log by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/audit-logs/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "audit-logs", "1"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

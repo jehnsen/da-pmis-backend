@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::create('crop_productions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('region_id')->constrained('regions')->cascadeOnDelete();
+            $table->foreignId('region_id')->nullable()->constrained('regions')->nullOnDelete();
             $table->string('crop_name');
             $table->decimal('production_volume', 15, 2)->nullable();
-            $table->string('unit')->default('kg');
+            $table->string('unit', 50);
             $table->date('harvest_date')->nullable();
             $table->year('fiscal_year');
             $table->timestamps();

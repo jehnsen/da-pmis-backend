@@ -14,9 +14,26 @@ class NewsletterSubscriptionRepository implements NewsletterSubscriptionReposito
         $this->model = $model;
     }
 
-    public function all()
+    public function all(array $filters = [])
     {
-        return $this->model->get();
+        $query = $this->model->query();
+
+        if (isset($filters['is_active'])) {
+            $query->where('is_active', $filters['is_active']);
+        }
+
+        return $query->get();
+    }
+
+    public function paginate(int $perPage = 15, array $filters = [])
+    {
+        $query = $this->model->query();
+
+        if (isset($filters['is_active'])) {
+            $query->where('is_active', $filters['is_active']);
+        }
+
+        return $query->paginate($perPage);
     }
 
     public function find($id)
@@ -32,20 +49,31 @@ class NewsletterSubscriptionRepository implements NewsletterSubscriptionReposito
     public function update($id, array $data)
     {
         $subscription = $this->find($id);
-        $subscription->update($data);
-        return $subscription;
+        if ($subscription) {
+            $subscription->update($data);
+            return $subscription->fresh();
+        }
+        return null;
     }
 
     public function delete($id)
     {
         $subscription = $this->find($id);
-        $subscription->delete();
-        return $subscription;
+        if ($subscription) {
+            $subscription->delete();
+            return $subscription;
+        }
+        return null;
     }
 
     public function getActive()
     {
         return $this->model->active()->get();
+    }
+
+    public function findByEmail(string $email)
+    {
+        return $this->model->where('email', $email)->first();
     }
 
     public function subscribe($email)

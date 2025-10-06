@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('news_updates', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->text('content')->nullable();
-            $table->string('image_url')->nullable();
+            $table->longText('content');
+            $table->string('image_url', 500)->nullable();
             $table->timestamp('published_at')->nullable();
             $table->boolean('is_featured')->default(false);
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();

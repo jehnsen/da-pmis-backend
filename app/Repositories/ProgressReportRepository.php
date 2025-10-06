@@ -14,9 +14,34 @@ class ProgressReportRepository implements ProgressReportRepositoryInterface
         $this->model = $model;
     }
 
-    public function all()
+    public function all(array $filters = [])
     {
-        return $this->model->with(['department', 'creator', 'metrics'])->get();
+        $query = $this->model->query()->with(['department', 'creator', 'metrics']);
+
+        if (isset($filters['department_id'])) {
+            $query->where('department_id', $filters['department_id']);
+        }
+
+        if (isset($filters['report_period'])) {
+            $query->where('report_period', $filters['report_period']);
+        }
+
+        return $query->orderBy('report_date', 'desc')->get();
+    }
+
+    public function paginate(int $perPage = 15, array $filters = [])
+    {
+        $query = $this->model->query()->with(['department', 'creator', 'metrics']);
+
+        if (isset($filters['department_id'])) {
+            $query->where('department_id', $filters['department_id']);
+        }
+
+        if (isset($filters['report_period'])) {
+            $query->where('report_period', $filters['report_period']);
+        }
+
+        return $query->orderBy('report_date', 'desc')->paginate($perPage);
     }
 
     public function find($id)
@@ -32,15 +57,34 @@ class ProgressReportRepository implements ProgressReportRepositoryInterface
     public function update($id, array $data)
     {
         $report = $this->find($id);
-        $report->update($data);
-        return $report;
+        if ($report) {
+            $report->update($data);
+            return $report->fresh();
+        }
+        return null;
     }
 
     public function delete($id)
     {
         $report = $this->find($id);
-        $report->delete();
-        return $report;
+        if ($report) {
+            $report->delete();
+            return $report;
+        }
+        return null;
+    }
+
+    public function createWithMetrics(array $reportData, array $metrics)
+    {
+        return \DB::transaction(function () use ($reportData, $metrics) {
+            $report = $this->model->create($reportData);
+
+            if (!empty($metrics)) {
+                $report->metrics()->createMany($metrics);
+            }
+
+            return $report->load(['department', 'creator', 'metrics']);
+        });
     }
 
     public function getByDepartment($departmentId)

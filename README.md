@@ -9,6 +9,9 @@ Setup:
 #this willl create a new model with controller & migration
 # php artisan make:model {Resident} -c -m 
 
+## refresh the migration
+php artisan migrate:refresh
+
 #Create interface
 # php artisan make:interface ResidentRepositoryInterface
 
@@ -118,30 +121,41 @@ pattern with repositoryinterface. Use Request (ex. StoreProjectRequesr, UpdatePr
 Resource, 
 
 
-## continue...
+## 🚀 NEXT STEPS TO GO LIVE
+Step 1: Run Migrations
+cd d:\xampp\apache\bin\da-pmis-backend
+php artisan migrate
+Step 2: (Optional) Create Seeders
+php artisan make:seeder ProjectTypesSeeder
+php artisan make:seeder ProjectStatusesSeeder
+php artisan db:seed
+Step 3: Test the API
+# List all routes
+php artisan route:list --path=api
 
-1. Create Service classes for all modules - on progress
+# Test public endpoint
+curl http://localhost/api/projects
 
-   ✅ ProjectService.php
-   ✅ ProgressReportService.php
-   ✅ CropProductionService.php
-   ✅ LivestockStatisticService.php
-   ✅ NewsUpdateService.php
-   ✅ DocumentService.php
-   ✅ ContactInquiryService.php
-   ✅ NewsletterSubscriptionService.php
-   ✅ AuditLogService.php
+# Test with authentication
+curl -X POST http://localhost/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"password"}'
 
-2. Create Request validation classes for all modules
+## Public Endpoints (No Auth)
+GET /api/projects
+GET /api/news-updates
+GET /api/documents
+GET /api/crop-productions
+GET /api/livestock-statistics
+POST /api/contact-inquiries
+POST /api/newsletter-subscriptions
 
-3. Create Resource classes for API responses
 
-4. Create Controllers for all modules
-
-5. Create ServiceProviders and register bindings
-
-6. Create AuditLog trait/middleware
-
-7. Update routes/api.php with all new routes
-
-8. Update bootstrap/providers.php with all ServiceProviders
+select * from projects;
+select * from project_types;
+select * from project_milestones;
+select * from project_statuses;
+select * from programs;
+select * from inventories;
+select * from 
+select * from users;

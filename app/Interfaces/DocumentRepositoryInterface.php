@@ -4,7 +4,7 @@ namespace App\Interfaces;
 
 interface DocumentRepositoryInterface
 {
-    public function all();
+    public function all(array $filters = []);
 
     public function find($id);
 
@@ -14,7 +14,11 @@ interface DocumentRepositoryInterface
 
     public function delete($id);
 
-    public function getByType($type);
+    public function paginate(int $perPage = 15, array $filters = []);
 
-    public function getByCategory($categoryId);
+    public function search(string $query);
+
+    public function getByType(string $type);
+
+    public function syncCategories($documentId, array $categoryIds);
 }

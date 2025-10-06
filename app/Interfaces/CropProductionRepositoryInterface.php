@@ -4,7 +4,7 @@ namespace App\Interfaces;
 
 interface CropProductionRepositoryInterface
 {
-    public function all();
+    public function all(array $filters = []);
 
     public function find($id);
 
@@ -14,7 +14,9 @@ interface CropProductionRepositoryInterface
 
     public function delete($id);
 
-    public function getByRegion($regionId);
+    public function paginate(int $perPage = 15, array $filters = []);
 
-    public function getByFiscalYear($fiscalYear);
+    public function getByFiscalYear(int $fiscalYear);
+
+    public function getByRegion($regionId);
 }

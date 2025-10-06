@@ -12,9 +12,9 @@ class NewsUpdateService
     {
     }
 
-    public function list(int $perPage = 15): LengthAwarePaginator|Collection
+    public function list(int $perPage = 15, array $filters = []): LengthAwarePaginator|Collection
     {
-        return $this->repo->all();
+        return $this->repo->paginate($perPage, $filters);
     }
 
     public function create(array $data)

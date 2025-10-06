@@ -14,9 +14,50 @@ class ProjectRepository implements ProjectRepositoryInterface
         $this->model = $model;
     }
 
-    public function all()
+    public function all(array $filters = [])
     {
-        return $this->model->with(['department', 'projectType', 'projectStatus'])->get();
+        $query = $this->model->query()->with(['department', 'projectType', 'projectStatus']);
+
+        if (isset($filters['department_id'])) {
+            $query->where('department_id', $filters['department_id']);
+        }
+
+        if (isset($filters['project_type_id'])) {
+            $query->where('project_type_id', $filters['project_type_id']);
+        }
+
+        if (isset($filters['project_status_id'])) {
+            $query->where('project_status_id', $filters['project_status_id']);
+        }
+
+        if (isset($filters['is_public'])) {
+            $query->where('is_public', $filters['is_public']);
+        }
+
+        return $query->get();
+    }
+
+    public function paginate(int $perPage = 15, array $filters = [])
+    {
+        $query = $this->model->query()->with(['department', 'projectType', 'projectStatus']);
+
+        if (isset($filters['department_id'])) {
+            $query->where('department_id', $filters['department_id']);
+        }
+
+        if (isset($filters['project_type_id'])) {
+            $query->where('project_type_id', $filters['project_type_id']);
+        }
+
+        if (isset($filters['project_status_id'])) {
+            $query->where('project_status_id', $filters['project_status_id']);
+        }
+
+        if (isset($filters['is_public'])) {
+            $query->where('is_public', $filters['is_public']);
+        }
+
+        return $query->paginate($perPage);
     }
 
     public function find($id)
@@ -32,15 +73,26 @@ class ProjectRepository implements ProjectRepositoryInterface
     public function update($id, array $data)
     {
         $project = $this->find($id);
-        $project->update($data);
-        return $project;
+        if ($project) {
+            $project->update($data);
+            return $project->fresh();
+        }
+        return null;
     }
 
     public function delete($id)
     {
         $project = $this->find($id);
-        $project->delete();
-        return $project;
+        if ($project) {
+            $project->delete();
+            return $project;
+        }
+        return null;
+    }
+
+    public function withRelations($id, array $relations = [])
+    {
+        return $this->model->with($relations)->find($id);
     }
 
     public function getPublicProjects()

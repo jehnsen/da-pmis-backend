@@ -4,7 +4,7 @@ namespace App\Interfaces;
 
 interface ProjectRepositoryInterface
 {
-    public function all();
+    public function all(array $filters = []);
 
     public function find($id);
 
@@ -14,9 +14,7 @@ interface ProjectRepositoryInterface
 
     public function delete($id);
 
-    public function getPublicProjects();
+    public function paginate(int $perPage = 15, array $filters = []);
 
-    public function getInternalProjects();
-
-    public function getByDepartment($departmentId);
+    public function withRelations($id, array $relations = []);
 }

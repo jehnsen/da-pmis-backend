@@ -8,8 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Region extends Model
 {
     protected $fillable = [
-        'code',
         'name',
+        'description',
+        'code',
     ];
 
     protected $casts = [

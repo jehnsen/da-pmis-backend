@@ -12,9 +12,9 @@ class AuditLogService
     {
     }
 
-    public function list(int $perPage = 15): LengthAwarePaginator|Collection
+    public function list(int $perPage = 15, array $filters = []): LengthAwarePaginator|Collection
     {
-        return $this->repo->all();
+        return $this->repo->paginate($perPage, $filters);
     }
 
     public function create(array $data)
@@ -35,5 +35,10 @@ class AuditLogService
     public function getByModel(string $modelType, int $modelId)
     {
         return $this->repo->getByModel($modelType, $modelId);
+    }
+
+    public function log(string $action, string $modelType, $modelId, $userId = null, array $oldValues = [], array $newValues = [])
+    {
+        return $this->repo->log($action, $modelType, $modelId, $userId, $oldValues, $newValues);
     }
 }

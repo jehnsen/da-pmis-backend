@@ -14,9 +14,26 @@ class NewsUpdateRepository implements NewsUpdateRepositoryInterface
         $this->model = $model;
     }
 
-    public function all()
+    public function all(array $filters = [])
     {
-        return $this->model->with(['creator'])->orderBy('published_at', 'desc')->get();
+        $query = $this->model->query()->with(['creator']);
+
+        if (isset($filters['is_featured'])) {
+            $query->where('is_featured', $filters['is_featured']);
+        }
+
+        return $query->orderBy('published_at', 'desc')->get();
+    }
+
+    public function paginate(int $perPage = 15, array $filters = [])
+    {
+        $query = $this->model->query()->with(['creator']);
+
+        if (isset($filters['is_featured'])) {
+            $query->where('is_featured', $filters['is_featured']);
+        }
+
+        return $query->orderBy('published_at', 'desc')->paginate($perPage);
     }
 
     public function find($id)
@@ -32,15 +49,21 @@ class NewsUpdateRepository implements NewsUpdateRepositoryInterface
     public function update($id, array $data)
     {
         $newsUpdate = $this->find($id);
-        $newsUpdate->update($data);
-        return $newsUpdate;
+        if ($newsUpdate) {
+            $newsUpdate->update($data);
+            return $newsUpdate->fresh();
+        }
+        return null;
     }
 
     public function delete($id)
     {
         $newsUpdate = $this->find($id);
-        $newsUpdate->delete();
-        return $newsUpdate;
+        if ($newsUpdate) {
+            $newsUpdate->delete();
+            return $newsUpdate;
+        }
+        return null;
     }
 
     public function getFeatured()

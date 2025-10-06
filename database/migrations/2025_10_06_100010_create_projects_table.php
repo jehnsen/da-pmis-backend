@@ -18,8 +18,8 @@ return new class extends Migration
             $table->decimal('budget', 15, 2)->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
-            $table->decimal('location_lat', 10, 7)->nullable();
-            $table->decimal('location_lng', 10, 7)->nullable();
+            $table->decimal('location_lat', 10, 8)->nullable();
+            $table->decimal('location_lng', 11, 8)->nullable();
             $table->boolean('is_public')->default(true);
             $table->softDeletes();
             $table->timestamps();

@@ -7,50 +7,41 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
    public function up(): void
    {
-      Schema::table('programs', function (Blueprint $t) {
-         // From “Program Information”
-         $t->string('program_type')->nullable()->after('title');        // dropdown
-         $t->string('priority_level')->nullable()->after('program_type'); // e.g., High/Med/Low
+      Schema::create('programs', function (Blueprint $t) {
+         $t->id();
 
-         // Use FK if you already have divisions table
-         if (Schema::hasTable('divisions')) {
-            $t->foreignId('division_id')->nullable()->after('priority_level')
-               ->constrained('divisions')->nullOnDelete();
-         } else {
-            $t->string('division')->nullable()->after('priority_level');
-         }
+         // Basic information
+         $t->string('title');
+         $t->string('program_type')->nullable();
+         $t->string('priority_level')->nullable(); // High/Med/Low
+         $t->text('description')->nullable();
+         $t->json('objectives')->nullable();
 
-         // From “Timeline & Budget”
-         $t->date('start_date')->nullable()->change();
-         $t->date('end_date')->nullable()->change();
-         $t->decimal('budget_php', 14, 2)->default(0)->change(); // Total Budget
-         $t->string('funding_source')->nullable()->after('budget_php');
-         $t->boolean('is_qrf_funded')->default(false)->after('funding_source');
+         // Division/Department
+         $t->foreignId('division_id')->nullable()->constrained('divisions')->nullOnDelete();
+         $t->string('division')->nullable(); // fallback if no division_id
 
-         // From “Program Details”
-         $t->string('program_coordinator')->nullable()->after('owner_office');
-         $t->unsignedInteger('expected_participants')->default(0)->after('program_coordinator');
+         // Timeline & Budget
+         $t->date('start_date')->nullable();
+         $t->date('end_date')->nullable();
+         $t->decimal('budget_php', 14, 2)->default(0);
+         $t->string('funding_source')->nullable();
+         $t->boolean('is_qrf_funded')->default(false);
 
-         // Program objectives (UI supports multiple) – store as JSON array
-         $t->json('objectives')->nullable()->after('description');
+         // Program Details
+         $t->string('owner_office')->nullable();
+         $t->string('program_coordinator')->nullable();
+         $t->unsignedInteger('expected_participants')->default(0);
+
+         // Status
+         $t->string('status')->default('planning'); // planning|active|completed|cancelled
+
+         $t->timestamps();
       });
    }
 
    public function down(): void
    {
-      Schema::table('programs', function (Blueprint $t) {
-         if (Schema::hasColumn('programs', 'division_id'))
-            $t->dropConstrainedForeignId('division_id');
-         $t->dropColumn([
-            'program_type',
-            'priority_level',
-            'division',
-            'funding_source',
-            'is_qrf_funded',
-            'program_coordinator',
-            'expected_participants',
-            'objectives'
-         ]);
-      });
+      Schema::dropIfExists('programs');
    }
 };

@@ -4,7 +4,7 @@ namespace App\Interfaces;
 
 interface ProgressReportRepositoryInterface
 {
-    public function all();
+    public function all(array $filters = []);
 
     public function find($id);
 
@@ -14,7 +14,7 @@ interface ProgressReportRepositoryInterface
 
     public function delete($id);
 
-    public function getByDepartment($departmentId);
+    public function paginate(int $perPage = 15, array $filters = []);
 
-    public function getByPeriod($period);
+    public function createWithMetrics(array $reportData, array $metrics);
 }

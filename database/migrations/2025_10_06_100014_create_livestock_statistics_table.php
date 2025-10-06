@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::create('livestock_statistics', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('region_id')->constrained('regions')->cascadeOnDelete();
+            $table->foreignId('region_id')->nullable()->constrained('regions')->nullOnDelete();
             $table->string('livestock_type');
-            $table->integer('population')->default(0);
-            $table->string('unit')->default('heads');
+            $table->bigInteger('population')->default(0);
+            $table->string('unit', 50);
             $table->date('recorded_date')->nullable();
             $table->year('fiscal_year');
             $table->timestamps();

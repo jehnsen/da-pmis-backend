@@ -23,6 +23,7 @@ return new class extends Migration
             $table->index('user_id');
             $table->index('model_type');
             $table->index('model_id');
+            $table->index('action');
             $table->index('created_at');
         });
     }

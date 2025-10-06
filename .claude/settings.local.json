@@ -4,7 +4,9 @@
       "Bash(php artisan make:migration:*)",
       "Bash(php artisan make:provider:*)",
       "Bash(php artisan:*)",
-      "Bash(php artisan config:clear:*)"
+      "Bash(php artisan config:clear:*)",
+      "Bash(mkdir:*)",
+      "Bash(php:*)"
     ],
     "deny": [],
     "ask": []

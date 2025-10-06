@@ -28,8 +28,8 @@ class Project extends Model
 
     protected $casts = [
         'budget' => 'decimal:2',
-        'location_lat' => 'decimal:7',
-        'location_lng' => 'decimal:7',
+        'location_lat' => 'decimal:8',
+        'location_lng' => 'decimal:8',
         'is_public' => 'boolean',
         'start_date' => 'date',
         'end_date' => 'date',
@@ -70,6 +70,14 @@ class Project extends Model
         return $this->belongsToMany(User::class, 'project_team_members')
             ->withPivot('role')
             ->withTimestamps();
+    }
+
+    /**
+     * Get project team member records
+     */
+    public function projectTeamMembers(): HasMany
+    {
+        return $this->hasMany(ProjectTeamMember::class);
     }
 
     /**

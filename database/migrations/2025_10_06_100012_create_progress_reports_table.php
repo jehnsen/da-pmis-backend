@@ -15,6 +15,7 @@ return new class extends Migration
             $table->date('report_date');
             $table->text('summary')->nullable();
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index('department_id');
