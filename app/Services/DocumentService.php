@@ -56,4 +56,14 @@ class DocumentService
     {
         return $this->repo->getByCategory($categoryId);
     }
+
+    public function getFeatured(int $limit = 10)
+    {
+        return $this->repo->getFeatured($limit);
+    }
+
+    public function incrementDownloadCount(int $id)
+    {
+        return $this->repo->incrementDownloadCount($id);
+    }
 }

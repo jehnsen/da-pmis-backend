@@ -21,4 +21,10 @@ interface DocumentRepositoryInterface
     public function getByType(string $type);
 
     public function syncCategories($documentId, array $categoryIds);
+
+    public function getByCategory($categoryId);
+
+    public function getFeatured(int $limit = 10);
+
+    public function incrementDownloadCount($id);
 }

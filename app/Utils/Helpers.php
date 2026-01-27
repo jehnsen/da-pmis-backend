@@ -7,33 +7,7 @@ use Carbon\Carbon;
 
 class Helpers
 {
-   /**
-     * Build a base query for Incidents with optional filters.
-     *
-     * This method constructs a query that can filter incidents based on their
-     * school, the school's division, or the school's region.
-     *
-     * @param array $filters An associative array of potential filters.
-     * - 'school_id' (int|string): Filter by a specific school ID.
-     * - 'division_id' (int|string): Filter incidents belonging to a specific division.
-     * - 'region_id' (int|string): Filter incidents belonging to a specific region.
-     */
-   public static function baseIncidentQuery(array $filters)
-   {
-      return Incident::query()
-         ->when($filters['school_id'] ?? null, fn($q, $schoolId) => $q->where('school_id', $schoolId))
-         ->when($filters['division_id'] ?? null, function ($q, $divisionId) {
-            $q->whereHas('school', fn($s) => $s->where('division_id', $divisionId));
-         })
-         ->when($filters['region_id'] ?? null, function ($q, $regionId) {
-            $q->whereHas(
-               'school',
-               fn($s) =>
-               $s->whereHas('division', fn($d) => $d->where('region_id', $regionId))
-            );
-         });
-   }
-
+   
    /**
     * Central place to map UI buckets -> DB values.
     * If you use an Enum (e.g., App\Enums\IncidentStatus), replace these values with ->value.

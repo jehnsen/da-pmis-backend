@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('password');
 
             // Foreign keys
-            $table->foreignId('school_id')->nullable()->constrained('schools')->nullOnDelete();
             $table->foreignId('role_id')->nullable()->constrained('roles')->nullOnDelete();
             $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete();
             $table->boolean('is_active')->default(1);

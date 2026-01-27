@@ -24,7 +24,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'full_name' => 'required|string|max:255',
             'username' => 'required|string|unique:users',
-            'email' => '',
+            'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
             'role_id' => 'required|integer',
         ]);
@@ -41,7 +41,6 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'role_id'  => $request->role_id,
             'department_id'  => $request->department_id,
-            'school_id'  => $request->school_id,
             'is_active' => 1
         ]);
 
@@ -62,19 +61,29 @@ class AuthController extends Controller
     {
         $credentials = $request->only('username', 'password');
 
-        if (!Auth::attempt($credentials)) {
+        if (! Auth::attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
         $user = Auth::user();
+
+        // Check if user is active
+        if (! $user->is_active) {
+            Auth::logout();
+
+            return response()->json(['error' => 'Your account has been deactivated. Please contact an administrator.'], 403);
+        }
+
+        // Track last login
+        $user->update(['last_login_at' => now()]);
+
         $token = $user->createToken('Personal Access Token')->accessToken;
 
         return response()->json([
             'message' => 'Login successful!',
-            'user' => $user,
+            'user' => $user->load(['role', 'department']),
             'token' => $token,
         ], 200);
-
     }
 
     /**

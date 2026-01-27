@@ -18,9 +18,39 @@ class ProjectController extends Controller
     public function index(Request $request)
     {
         $perPage = (int) $request->query('per_page', 15);
-        $filters = $request->only(['department_id', 'project_type_id', 'project_status_id', 'is_public']);
+
+        // Collect all possible filter parameters
+        $filterKeys = [
+            'search',
+            'department_id',
+            'project_type_id',
+            'project_status_id',
+            'category_id',
+            'status_id',
+            'region_id',
+            'is_public',
+            'min_budget',
+            'max_budget',
+            'start_date_from',
+            'start_date_to',
+            'end_date_from',
+            'end_date_to',
+            'fiscal_year',
+            'sort_by',
+            'sort_order',
+        ];
+
+        $filters = $request->only($filterKeys);
+
+        // Remove null/empty values for cleaner filters_applied
+        $appliedFilters = array_filter($filters, fn ($value) => $value !== null && $value !== '');
+
         $data = $this->service->list($perPage, $filters);
-        return ProjectResource::collection($data);
+
+        // Return with filters_applied metadata
+        return ProjectResource::collection($data)->additional([
+            'filters_applied' => $appliedFilters,
+        ]);
     }
 
     public function store(StoreProjectRequest $request): JsonResponse

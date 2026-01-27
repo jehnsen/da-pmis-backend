@@ -1,0 +1,493 @@
+<?php
+
+namespace App\Repositories;
+
+use App\Interfaces\ProjectApprovalRepositoryInterface;
+use App\Models\AuditLog;
+use App\Models\Project;
+use App\Models\ProjectApproval;
+use App\Models\User;
+use App\Notifications\ProjectApprovalNotification;
+use App\Notifications\ProjectApprovedNotification;
+use App\Notifications\ProjectChangesRequestedNotification;
+use App\Notifications\ProjectRejectedNotification;
+use Illuminate\Support\Facades\DB;
+
+class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
+{
+    /**
+     * Mapping of roles to approval levels
+     */
+    private array $roleToLevelMap = [
+        'field_officer' => 'field',
+        'municipal_officer' => 'municipal',
+        'provincial_officer' => 'provincial',
+        'regional_director' => 'regional',
+        'admin' => 'regional', // Admin can approve at any level
+        'super_admin' => 'regional',
+    ];
+
+    /**
+     * Approval flow: current status => next status
+     */
+    private array $approvalFlow = [
+        'draft' => 'pending_municipal',
+        'pending_municipal' => 'pending_provincial',
+        'pending_provincial' => 'pending_regional',
+        'pending_regional' => 'approved',
+    ];
+
+    /**
+     * Level to pending status mapping
+     */
+    private array $levelToStatusMap = [
+        'municipal' => 'pending_municipal',
+        'provincial' => 'pending_provincial',
+        'regional' => 'pending_regional',
+    ];
+
+    public function submitForApproval(Project $project, User $user): Project
+    {
+        return DB::transaction(function () use ($project, $user) {
+            $fromStatus = $project->approval_status;
+            $toStatus = 'pending_municipal';
+
+            // Update project
+            $project->update([
+                'approval_status' => $toStatus,
+                'submitted_by' => $user->id,
+                'submitted_at' => now(),
+            ]);
+
+            // Create approval record
+            ProjectApproval::create([
+                'project_id' => $project->id,
+                'user_id' => $user->id,
+                'action' => 'submitted',
+                'level' => 'field',
+                'from_status' => $fromStatus,
+                'to_status' => $toStatus,
+                'action_taken_at' => now(),
+            ]);
+
+            // Create audit log
+            $this->createAuditLog($project, $user, 'submitted', $fromStatus, $toStatus);
+
+            // Send notification to municipal officers
+            $this->notifyApproversAtLevel($project, 'municipal');
+
+            return $project->fresh(['department', 'projectType', 'projectStatus', 'approvals']);
+        });
+    }
+
+    public function approve(Project $project, User $user, string $level, ?string $comments = null): Project
+    {
+        return DB::transaction(function () use ($project, $user, $level, $comments) {
+            $fromStatus = $project->approval_status;
+            $toStatus = $this->getNextApprovalStatus($fromStatus);
+            $isFinalApproval = $toStatus === 'approved';
+
+            // Update project
+            $project->update([
+                'approval_status' => $toStatus,
+            ]);
+
+            // Create approval record
+            ProjectApproval::create([
+                'project_id' => $project->id,
+                'user_id' => $user->id,
+                'action' => 'approved',
+                'comments' => $comments,
+                'level' => $level,
+                'from_status' => $fromStatus,
+                'to_status' => $toStatus,
+                'action_taken_at' => now(),
+            ]);
+
+            // Create audit log
+            $this->createAuditLog($project, $user, 'approved', $fromStatus, $toStatus, $comments);
+
+            // Notify submitter about approval
+            $this->notifySubmitter($project, $user, $level, $isFinalApproval);
+
+            // If not final approval, notify next level approvers
+            if (! $isFinalApproval) {
+                $nextLevel = $this->getNextLevel($level);
+                if ($nextLevel) {
+                    $this->notifyApproversAtLevel($project, $nextLevel);
+                }
+            }
+
+            return $project->fresh(['department', 'projectType', 'projectStatus', 'approvals']);
+        });
+    }
+
+    public function reject(Project $project, User $user, string $level, string $comments, ?string $reason = null): Project
+    {
+        return DB::transaction(function () use ($project, $user, $level, $comments, $reason) {
+            $fromStatus = $project->approval_status;
+            $toStatus = 'rejected';
+
+            // Update project
+            $project->update([
+                'approval_status' => $toStatus,
+            ]);
+
+            // Create approval record
+            ProjectApproval::create([
+                'project_id' => $project->id,
+                'user_id' => $user->id,
+                'action' => 'rejected',
+                'comments' => $comments,
+                'reason' => $reason,
+                'level' => $level,
+                'from_status' => $fromStatus,
+                'to_status' => $toStatus,
+                'action_taken_at' => now(),
+            ]);
+
+            // Create audit log
+            $this->createAuditLog($project, $user, 'rejected', $fromStatus, $toStatus, $comments);
+
+            // Notify submitter about rejection
+            $this->notifySubmitterRejected($project, $user, $level, $comments, $reason);
+
+            return $project->fresh(['department', 'projectType', 'projectStatus', 'approvals']);
+        });
+    }
+
+    public function requestChanges(Project $project, User $user, string $level, string $comments): Project
+    {
+        return DB::transaction(function () use ($project, $user, $level, $comments) {
+            $fromStatus = $project->approval_status;
+            $toStatus = 'draft'; // Send back to draft for revisions
+
+            // Update project
+            $project->update([
+                'approval_status' => $toStatus,
+            ]);
+
+            // Create approval record
+            ProjectApproval::create([
+                'project_id' => $project->id,
+                'user_id' => $user->id,
+                'action' => 'requested_changes',
+                'comments' => $comments,
+                'level' => $level,
+                'from_status' => $fromStatus,
+                'to_status' => $toStatus,
+                'action_taken_at' => now(),
+            ]);
+
+            // Create audit log
+            $this->createAuditLog($project, $user, 'requested_changes', $fromStatus, $toStatus, $comments);
+
+            // Notify submitter about requested changes
+            $this->notifySubmitterChangesRequested($project, $user, $level, $comments);
+
+            return $project->fresh(['department', 'projectType', 'projectStatus', 'approvals']);
+        });
+    }
+
+    public function getPendingApprovalForUser(User $user, int $perPage = 15)
+    {
+        $level = $this->getUserApprovalLevel($user);
+
+        if (! $level) {
+            return Project::whereRaw('1 = 0')->paginate($perPage); // Empty result
+        }
+
+        $pendingStatus = $this->levelToStatusMap[$level] ?? null;
+
+        if (! $pendingStatus) {
+            return Project::whereRaw('1 = 0')->paginate($perPage);
+        }
+
+        return Project::where('approval_status', $pendingStatus)
+            ->with(['department', 'projectType', 'projectStatus', 'submitter'])
+            ->orderBy('submitted_at', 'asc')
+            ->paginate($perPage);
+    }
+
+    public function getApprovalHistory(int $projectId): array
+    {
+        $project = Project::with(['approvals.user', 'department', 'submitter'])->find($projectId);
+
+        if (! $project) {
+            return [];
+        }
+
+        $history = $project->approvals->map(function ($approval) {
+            return [
+                'id' => $approval->id,
+                'level' => $approval->level,
+                'level_display' => $approval->level_display,
+                'action' => $approval->action,
+                'action_display' => $approval->action_display,
+                'by' => $approval->user->full_name ?? $approval->user->username,
+                'user_id' => $approval->user_id,
+                'comments' => $approval->comments,
+                'reason' => $approval->reason,
+                'from_status' => $approval->from_status,
+                'to_status' => $approval->to_status,
+                'timestamp' => $approval->action_taken_at?->toIso8601String(),
+            ];
+        })->toArray();
+
+        return [
+            'project_id' => $project->id,
+            'project_title' => $project->title,
+            'current_status' => $project->approval_status,
+            'current_status_display' => $project->approval_status_display,
+            'submitted_by' => $project->submitter ? [
+                'id' => $project->submitter->id,
+                'name' => $project->submitter->full_name ?? $project->submitter->username,
+            ] : null,
+            'submitted_at' => $project->submitted_at?->toIso8601String(),
+            'history' => $history,
+        ];
+    }
+
+    public function getUserApprovalLevel(User $user): ?string
+    {
+        if (! $user->role) {
+            return null;
+        }
+
+        $roleName = strtolower($user->role->name);
+
+        // Check direct mapping
+        if (isset($this->roleToLevelMap[$roleName])) {
+            return $this->roleToLevelMap[$roleName];
+        }
+
+        // Check if role contains key terms
+        if (str_contains($roleName, 'admin') || str_contains($roleName, 'director')) {
+            return 'regional';
+        }
+
+        if (str_contains($roleName, 'provincial')) {
+            return 'provincial';
+        }
+
+        if (str_contains($roleName, 'municipal') || str_contains($roleName, 'city')) {
+            return 'municipal';
+        }
+
+        if (str_contains($roleName, 'field') || str_contains($roleName, 'officer')) {
+            return 'field';
+        }
+
+        return null;
+    }
+
+    public function canUserApprove(User $user, Project $project): bool
+    {
+        $userLevel = $this->getUserApprovalLevel($user);
+        $projectLevel = $project->getCurrentPendingLevel();
+
+        if (! $userLevel || ! $projectLevel) {
+            return false;
+        }
+
+        // Admin can approve at any level
+        if ($user->role && str_contains(strtolower($user->role->name), 'admin')) {
+            return true;
+        }
+
+        return $userLevel === $projectLevel;
+    }
+
+    public function getProjectsByApprovalStatus(string $status, int $perPage = 15)
+    {
+        return Project::where('approval_status', $status)
+            ->with(['department', 'projectType', 'projectStatus', 'submitter'])
+            ->orderBy('updated_at', 'desc')
+            ->paginate($perPage);
+    }
+
+    public function getApprovalStatistics(): array
+    {
+        $stats = [
+            'total_projects' => Project::count(),
+            'by_status' => [
+                'draft' => Project::where('approval_status', 'draft')->count(),
+                'pending_municipal' => Project::where('approval_status', 'pending_municipal')->count(),
+                'pending_provincial' => Project::where('approval_status', 'pending_provincial')->count(),
+                'pending_regional' => Project::where('approval_status', 'pending_regional')->count(),
+                'approved' => Project::where('approval_status', 'approved')->count(),
+                'rejected' => Project::where('approval_status', 'rejected')->count(),
+            ],
+            'total_pending' => Project::pendingApproval()->count(),
+            'recent_approvals' => ProjectApproval::where('action', 'approved')
+                ->where('action_taken_at', '>=', now()->subDays(30))
+                ->count(),
+            'recent_rejections' => ProjectApproval::where('action', 'rejected')
+                ->where('action_taken_at', '>=', now()->subDays(30))
+                ->count(),
+            'average_approval_time' => $this->calculateAverageApprovalTime(),
+        ];
+
+        return $stats;
+    }
+
+    /**
+     * Get the next approval status based on current status
+     */
+    private function getNextApprovalStatus(string $currentStatus): string
+    {
+        return $this->approvalFlow[$currentStatus] ?? $currentStatus;
+    }
+
+    /**
+     * Get the next approval level
+     */
+    private function getNextLevel(string $currentLevel): ?string
+    {
+        $levelFlow = [
+            'municipal' => 'provincial',
+            'provincial' => 'regional',
+        ];
+
+        return $levelFlow[$currentLevel] ?? null;
+    }
+
+    /**
+     * Notify approvers at a specific level
+     */
+    private function notifyApproversAtLevel(Project $project, string $level): void
+    {
+        try {
+            // Find users who can approve at this level
+            $approvers = User::whereHas('role', function ($query) use ($level) {
+                $query->where(function ($q) use ($level) {
+                    // Match exact role names
+                    $q->where('name', 'LIKE', "%{$level}%");
+
+                    // Admin can approve at any level
+                    if ($level === 'regional') {
+                        $q->orWhere('name', 'LIKE', '%admin%')
+                            ->orWhere('name', 'LIKE', '%director%');
+                    }
+                });
+            })->where('is_active', true)->get();
+
+            foreach ($approvers as $approver) {
+                $approver->notify(new ProjectApprovalNotification($project, $level));
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send approval notifications: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Notify the project submitter about approval
+     */
+    private function notifySubmitter(Project $project, User $approver, string $level, bool $isFinalApproval): void
+    {
+        try {
+            if ($project->submitter) {
+                $project->submitter->notify(
+                    new ProjectApprovedNotification($project, $approver, $level, $isFinalApproval)
+                );
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send approval notification to submitter: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Notify the project submitter about rejection
+     */
+    private function notifySubmitterRejected(Project $project, User $rejector, string $level, string $comments, ?string $reason): void
+    {
+        try {
+            if ($project->submitter) {
+                $project->submitter->notify(
+                    new ProjectRejectedNotification($project, $rejector, $level, $comments, $reason)
+                );
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send rejection notification to submitter: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Notify the project submitter about requested changes
+     */
+    private function notifySubmitterChangesRequested(Project $project, User $reviewer, string $level, string $comments): void
+    {
+        try {
+            if ($project->submitter) {
+                $project->submitter->notify(
+                    new ProjectChangesRequestedNotification($project, $reviewer, $level, $comments)
+                );
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send changes requested notification to submitter: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Create an audit log entry for approval actions
+     */
+    private function createAuditLog(
+        Project $project,
+        User $user,
+        string $action,
+        string $fromStatus,
+        string $toStatus,
+        ?string $comments = null
+    ): void {
+        try {
+            AuditLog::create([
+                'user_id' => $user->id,
+                'action' => "project_approval_{$action}",
+                'model_type' => Project::class,
+                'model_id' => $project->id,
+                'old_values' => json_encode(['approval_status' => $fromStatus]),
+                'new_values' => json_encode([
+                    'approval_status' => $toStatus,
+                    'comments' => $comments,
+                ]),
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+        } catch (\Exception $e) {
+            // Log error but don't fail the transaction
+            \Log::error('Failed to create audit log for project approval: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Calculate average time from submission to final approval
+     */
+    private function calculateAverageApprovalTime(): ?float
+    {
+        $approvedProjects = Project::where('approval_status', 'approved')
+            ->whereNotNull('submitted_at')
+            ->get();
+
+        if ($approvedProjects->isEmpty()) {
+            return null;
+        }
+
+        $totalDays = 0;
+        $count = 0;
+
+        foreach ($approvedProjects as $project) {
+            $finalApproval = $project->approvals()
+                ->where('action', 'approved')
+                ->where('to_status', 'approved')
+                ->first();
+
+            if ($finalApproval && $project->submitted_at) {
+                $days = $project->submitted_at->diffInDays($finalApproval->action_taken_at);
+                $totalDays += $days;
+                $count++;
+            }
+        }
+
+        return $count > 0 ? round($totalDays / $count, 1) : null;
+    }
+}

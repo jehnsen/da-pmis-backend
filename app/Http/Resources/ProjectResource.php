@@ -11,7 +11,7 @@ class ProjectResource extends JsonResource
         $data = [
             'id' => $this->id,
             'title' => $this->title,
-            'description' => $this->when($this->shouldShowInternal(), $this->description, substr($this->description, 0, 200)),
+            'description' => $this->when($this->shouldShowInternal(), $this->description, substr($this->description ?? '', 0, 200)),
             'department' => new DepartmentResource($this->whenLoaded('department')),
             'project_type' => $this->whenLoaded('projectType'),
             'project_status' => $this->whenLoaded('projectStatus'),
@@ -30,6 +30,18 @@ class ProjectResource extends JsonResource
             $data['budget'] = $this->budget;
             $data['team_members'] = ProjectTeamMemberResource::collection($this->whenLoaded('teamMembers'));
             $data['milestones'] = ProjectMilestoneResource::collection($this->whenLoaded('milestones'));
+
+            // Approval workflow data
+            $data['approval_status'] = $this->approval_status;
+            $data['approval_status_display'] = $this->approval_status_display;
+            $data['submitted_by'] = $this->whenLoaded('submitter', function () {
+                return [
+                    'id' => $this->submitter->id,
+                    'name' => $this->submitter->full_name ?? $this->submitter->username,
+                ];
+            });
+            $data['submitted_at'] = $this->submitted_at?->toIso8601String();
+            $data['approvals'] = ProjectApprovalResource::collection($this->whenLoaded('approvals'));
         }
 
         return $data;
@@ -38,6 +50,6 @@ class ProjectResource extends JsonResource
     private function shouldShowInternal(): bool
     {
         // Show internal data if user is authenticated or project is not public
-        return auth()->check() || !$this->is_public;
+        return auth()->check() || ! $this->is_public;
     }
 }
