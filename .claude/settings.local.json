@@ -6,7 +6,10 @@
       "Bash(php artisan:*)",
       "Bash(php artisan config:clear:*)",
       "Bash(mkdir:*)",
-      "Bash(php:*)"
+      "Bash(php:*)",
+      "Bash(git -C /d/xampp/apache/bin/da-pmis-backend log --oneline)",
+      "Bash(grep:*)",
+      "Bash(xargs -I {} sh -c 'echo \"\"=== {} ===\"\" && grep -E \"\"\\(Schema::create|dropIfExists\\)\"\" {}')"
     ],
     "deny": [],
     "ask": []
