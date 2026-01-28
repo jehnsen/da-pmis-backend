@@ -126,6 +126,14 @@ class Project extends Model
     }
 
     /**
+     * Get images for this project
+     */
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProjectImage::class)->orderBy('display_order')->orderBy('id');
+    }
+
+    /**
      * Get total disbursed amount
      */
     public function getTotalDisbursedAttribute(): float

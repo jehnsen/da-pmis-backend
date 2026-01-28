@@ -81,6 +81,14 @@ class ProgressReport extends Model
     }
 
     /**
+     * Get images for this report
+     */
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProgressReportImage::class)->orderBy('display_order')->orderBy('id');
+    }
+
+    /**
      * Scope for filtering by project
      */
     public function scopeForProject($query, int $projectId)

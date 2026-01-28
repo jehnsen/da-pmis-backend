@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\ProgressReportImageController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProgressReportController;
 use App\Http\Controllers\CropProductionController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\NewsUpdateController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ContactInquiryController;
 use App\Http\Controllers\NewsletterSubscriptionController;
+use App\Http\Controllers\ProjectImageController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\DepartmentReportController;
 use App\Http\Controllers\ProjectApprovalController;
@@ -184,6 +186,21 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/disbursements-by-category', [ProjectDisbursementController::class, 'byCategory']);
         Route::get('/monthly-spending', [ProjectDisbursementController::class, 'monthlySpending']);
     });
+
+    // Project Images
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('projects/{project}/images', [ProjectImageController::class, 'index']);
+        Route::post('projects/{project}/images', [ProjectImageController::class, 'upload']);
+        Route::put('projects/{project}/images/{image}', [ProjectImageController::class, 'update']);
+        Route::delete('projects/{project}/images/{image}', [ProjectImageController::class, 'destroy']);
+
+        // Progress Report Images
+        Route::get('progress-reports/{report}/images', [ProgressReportImageController::class, 'index']);
+        Route::post('progress-reports/{report}/images', [ProgressReportImageController::class, 'upload']);
+        Route::put('progress-reports/{report}/images/{image}', [ProgressReportImageController::class, 'update']);
+        Route::delete('progress-reports/{report}/images/{image}', [ProgressReportImageController::class, 'destroy']);
+    });
+
 });
 
 // Public project show route (must be last to avoid conflicts with specific routes above)

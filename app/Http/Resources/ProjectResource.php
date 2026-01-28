@@ -21,6 +21,8 @@ class ProjectResource extends JsonResource
                 'lat' => $this->location_lat,
                 'lng' => $this->location_lng,
             ]),
+            'images' => ProjectImageResource::collection($this->whenLoaded('images')),
+            'cover_image' => new ProjectImageResource($this->images()->cover()->first()),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
