@@ -9,7 +9,11 @@
       "Bash(php:*)",
       "Bash(git -C /d/xampp/apache/bin/da-pmis-backend log --oneline)",
       "Bash(grep:*)",
-      "Bash(xargs -I {} sh -c 'echo \"\"=== {} ===\"\" && grep -E \"\"\\(Schema::create|dropIfExists\\)\"\" {}')"
+      "Bash(xargs -I {} sh -c 'echo \"\"=== {} ===\"\" && grep -E \"\"\\(Schema::create|dropIfExists\\)\"\" {}')",
+      "Bash(del:*)",
+      "Bash(bash:*)",
+      "Bash(ls:*)",
+      "Bash(composer update:*)"
     ],
     "deny": [],
     "ask": []

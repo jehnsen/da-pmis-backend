@@ -21,12 +21,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Public routes - no authentication required
-Route::post('register', [AuthController::class, 'register']);
-Route::post('login', [AuthController::class, 'login']);
+Route::post('register', [AuthController::class, 'register'])->middleware('throttle:5,1');
+Route::post('login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+
+// Password Reset Routes
+Route::post('password/forgot', [AuthController::class, 'forgotPassword'])->middleware('throttle:3,1')->name('password.email');
+Route::post('password/reset', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1')->name('password.reset');
 
 // Public API endpoints
 Route::get('projects', [ProjectController::class, 'index']); // Public can view projects
-Route::get('projects/{project}', [ProjectController::class, 'show']);
+// Note: Specific project routes are defined below in the auth middleware to avoid route conflicts
 Route::get('news-updates', [NewsUpdateController::class, 'index']); // Public news
 Route::get('news-updates/{newsUpdate}', [NewsUpdateController::class, 'show']);
 Route::get('documents', [DocumentController::class, 'index']); // Public documents
@@ -36,9 +40,9 @@ Route::post('documents/{document}/download', [DocumentController::class, 'downlo
 Route::get('crop-productions', [CropProductionController::class, 'index']); // Public agricultural data
 Route::get('livestock-statistics', [LivestockStatisticController::class, 'index']);
 
-// Public contact and newsletter
-Route::post('contact-inquiries', [ContactInquiryController::class, 'store']); // Anyone can submit inquiry
-Route::post('newsletter-subscriptions', [NewsletterSubscriptionController::class, 'store']); // Anyone can subscribe
+// Public contact and newsletter (with rate limiting to prevent spam)
+Route::post('contact-inquiries', [ContactInquiryController::class, 'store'])->middleware('throttle:10,1'); // 10 submissions per minute
+Route::post('newsletter-subscriptions', [NewsletterSubscriptionController::class, 'store'])->middleware('throttle:5,1'); // 5 subscriptions per minute
 
 Route::get('test', function () {
     return ['status' => 'success', 'message' => 'API is working'];
@@ -68,12 +72,13 @@ Route::prefix('locations')->group(function () {
 });
 
 // Protected routes - authentication required
-Route::middleware('auth:api')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
     Route::post('logout', [AuthController::class, 'logout']);
+    Route::post('password/change', [AuthController::class, 'changePassword']);
 
     // Departments (Internal only)
     Route::apiResource('departments', DepartmentController::class);
@@ -180,3 +185,6 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/monthly-spending', [ProjectDisbursementController::class, 'monthlySpending']);
     });
 });
+
+// Public project show route (must be last to avoid conflicts with specific routes above)
+Route::get('projects/{project}', [ProjectController::class, 'show']);

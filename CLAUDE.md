@@ -1,12 +1,12 @@
 ## Project Overview
 
-**DA-PMIS** (Department of Agriculture - Performance Management Information System) is a Laravel 11 backend API for the CARAGA Region (Region XIII), Philippines. It manages agricultural projects, crop/livestock statistics, progress reports, and public engagement.
+**DA-PMIS** (Department of Agriculture - Performance Management Information System) is a Laravel 11 backend API for the CARAGA Region (Region XIII), Philippines. It manages agricultural projects, crop/livestock statistics, progress reports, dashboard analytics, project approvals, financial disbursements, and public engagement.
 
 ## Tech Stack
 
 - **Framework**: Laravel 11 with PHP 8.2+
 - **Database**: MySQL
-- **Authentication**: Laravel Passport (OAuth 2.0)
+- **Authentication**: Laravel Sanctum (Token-based API Authentication)
 - **Architecture**: Service-Repository-Interface Pattern
 
 ## Project Structure
@@ -16,15 +16,15 @@ app/
 ├── Classes/           # Utility classes (ApiResponseClass)
 ├── Enums/             # Enumerations (IncidentSeverity, IncidentStatus)
 ├── Http/
-│   ├── Controllers/   # 14 API controllers
+│   ├── Controllers/   # 18 API controllers
 │   ├── Middleware/    # ForceJsonResponse middleware
 │   ├── Requests/      # Form request validation (Store/Update pairs)
 │   └── Resources/     # API resource transformers
-├── Interfaces/        # Repository interfaces
-├── Models/            # 22 Eloquent models
+├── Interfaces/        # 16 Repository interfaces
+├── Models/            # 26 Eloquent models
 ├── Providers/         # Service providers (interface bindings)
-├── Repositories/      # Repository implementations
-├── Services/          # Business logic layer
+├── Repositories/      # 16 Repository implementations
+├── Services/          # 16 Business logic services
 └── Traits/            # Auditable trait for change tracking
 ```
 
@@ -39,12 +39,37 @@ Each module follows this pattern:
 4. **Provider** binds interface to implementation (`app/Providers/`)
 5. **Controller** orchestrates the flow (`app/Http/Controllers/`)
 
+## Key Controllers
+
+| Controller | Description |
+|------------|-------------|
+| `AuthController` | User authentication (login, register, logout) |
+| `DashboardController` | Dashboard analytics endpoints |
+| `ProjectController` | Project CRUD operations |
+| `ProjectApprovalController` | Project approval workflow |
+| `ProjectDisbursementController` | Financial disbursement tracking |
+| `ProgressReportController` | Project progress reporting |
+| `DepartmentController` | Department CRUD operations |
+| `DepartmentReportController` | Department reports & KPI tracking |
+| `LocationController` | Geographic location hierarchy |
+| `CropProductionController` | Agricultural crop data |
+| `LivestockStatisticController` | Livestock data management |
+| `NewsUpdateController` | News/announcements management |
+| `DocumentController` | Document management with download tracking |
+| `UserManagementController` | Admin user management |
+| `NotificationController` | User notification system |
+| `ContactInquiryController` | Public contact form management |
+| `NewsletterSubscriptionController` | Newsletter subscription management |
+
 ## Key Models
 
 - **Project** - Main entity with budget, timeline, location, team members, milestones
+- **ProjectApproval** - Approval workflow records
+- **ProjectDisbursement** - Financial disbursements per project
 - **Department** - Organizational units with KPIs
 - **ProgressReport** - Periodic reports with metrics
 - **CropProduction** / **LivestockStatistic** - Agricultural data
+- **Region** / **Province** / **Municipality** - Location hierarchy
 - **NewsUpdate** / **Document** - Content management
 - **User** - Authentication with roles and permissions
 - **AuditLog** - Change tracking via Auditable trait
@@ -75,18 +100,73 @@ php artisan route:list --path=api      # API routes only
 ./vendor/bin/phpunit tests/Feature/    # Feature tests only
 ```
 
-## API Routes
+## API Routes (90+ Endpoints)
 
-**Public Endpoints** (no auth required):
+### Public Endpoints (no auth required)
+
+**Authentication:**
 - `POST /api/register`, `POST /api/login`
-- `GET /api/projects`, `GET /api/news-updates`, `GET /api/documents`
+
+**Dashboard Analytics:**
+- `GET /api/dashboard/overview` - Overview statistics
+- `GET /api/dashboard/budget-allocation` - Budget by region
+- `GET /api/dashboard/project-status-distribution` - Project status counts
+- `GET /api/dashboard/national-performance` - Production metrics
+- `GET /api/dashboard/recent-updates` - Recent project updates
+- `GET /api/dashboard/monthly-progress` - Monthly progress by department
+
+**Location Management:**
+- `GET /api/locations/regions`, `/provinces`, `/municipalities`
+- `GET /api/locations/hierarchy` - Full location tree
+- `GET /api/locations/search` - Search locations
+- `GET /api/locations/statistics` - Location counts
+
+**Content:**
+- `GET /api/projects`, `GET /api/projects/{id}`
+- `GET /api/news-updates`, `GET /api/documents`
+- `GET /api/documents/featured` - Featured documents
+- `POST /api/documents/{id}/download` - Download with tracking
 - `GET /api/crop-productions`, `GET /api/livestock-statistics`
+
+**User Engagement:**
 - `POST /api/contact-inquiries`, `POST /api/newsletter-subscriptions`
 
-**Protected Endpoints** (require `auth:api` middleware):
+### Protected Endpoints (require `auth:api` middleware)
+
+**Project Management:**
 - Full CRUD for projects, departments, progress-reports
-- Management of crop/livestock data, news, documents
-- User profile and logout
+- `POST /api/projects/{id}/submit-for-approval`
+- `POST /api/projects/{id}/approve`, `/reject`, `/request-changes`
+- `GET /api/projects/{id}/approval-history`
+- `GET /api/projects/pending-approval`, `/approval-statistics`
+
+**Project Disbursements:**
+- `GET /api/projects/{id}/disbursements` - List disbursements
+- `POST /api/projects/{id}/disbursements` - Create disbursement
+- `POST /api/projects/{id}/disbursements/{id}/approve`, `/cancel`
+- `GET /api/projects/{id}/financial-summary`
+- `GET /api/projects/{id}/monthly-spending`
+
+**Department Reports:**
+- `GET /api/departments/reports` - All department reports
+- `GET /api/departments/budget-utilization`
+- `GET /api/departments/{id}/monthly-progress`
+- `GET /api/departments/{id}/kpi-summary`
+
+**User Management:**
+- `GET /api/users`, `POST /api/users`
+- `GET /api/users/statistics`
+- `PATCH /api/users/{id}/toggle-status`
+
+**Notifications:**
+- `GET /api/notifications`, `/unread-count`
+- `POST /api/notifications/{id}/mark-read`, `/mark-all-read`
+- `DELETE /api/notifications/clear-all`
+
+**Progress Reports:**
+- `GET /api/progress-reports/with-issues`
+- `GET /api/progress-reports/statistics`
+- `GET /api/projects/{id}/progress-timeline`
 
 ## Database
 
@@ -135,373 +215,81 @@ Key `.env` variables:
 - Resources for API response transformation
 - Repositories for data access (never query in controllers)
 
-
-# DA-CARAGA PMIS Backend - Project Summary
-
-## 🎯 Project Overview
-
-**Project Name:** Department of Agriculture - CARAGA Region Performance Management Information System (PMIS)
-**Technology Stack:** Laravel 11, PHP 8.2+, MySQL
-**Architecture Pattern:** Service-Repository-Interface Pattern
-**Status:** ✅ COMPLETE - Ready for Deployment
-
 ---
 
-## ✅ Completed Components (113 Files Created)
+## Key Features
 
-### 1. **Request Validation Classes** - 16 Files
-Located in `app/Http/Requests/`
+### 1. Dashboard Analytics
+- Overview statistics (total projects, investment, success rate)
+- Budget allocation by region with utilization rates
+- Project status distribution
+- National performance metrics (rice, corn, fish, livestock)
+- Recent project updates
+- Monthly progress tracking
 
-#### Project Module
-- `Project/StoreProjectRequest.php`
-- `Project/UpdateProjectRequest.php`
+### 2. Project Approval Workflow
+- Submit projects for approval
+- Multi-level approval process
+- Request changes before approval
+- Track approval history
+- Statistics on approval workflow
 
-#### Progress Report Module
-- `ProgressReport/StoreProgressReportRequest.php`
-- `ProgressReport/UpdateProgressReportRequest.php`
+### 3. Project Disbursements
+- Track financial disbursements per project
+- Categorize spending (equipment, personnel, supplies, etc.)
+- Approve/cancel disbursements
+- Financial summary and monthly spending reports
 
-#### Agricultural Data Module
-- `CropProduction/StoreCropProductionRequest.php`
-- `CropProduction/UpdateCropProductionRequest.php`
-- `LivestockStatistic/StoreLivestockStatisticRequest.php`
-- `LivestockStatistic/UpdateLivestockStatisticRequest.php`
+### 4. Location Management
+- Hierarchical location data (Region → Province → Municipality)
+- Search functionality
+- Statistics per location
 
-#### Content Management Module
-- `NewsUpdate/StoreNewsUpdateRequest.php`
-- `NewsUpdate/UpdateNewsUpdateRequest.php`
-- `Document/StoreDocumentRequest.php`
-- `Document/UpdateDocumentRequest.php`
+### 5. User Notifications
+- In-app notification system
+- Mark as read/unread
+- Bulk operations
 
-#### User Engagement Module
-- `ContactInquiry/StoreContactInquiryRequest.php`
-- `ContactInquiry/UpdateContactInquiryRequest.php`
-- `NewsletterSubscription/StoreNewsletterSubscriptionRequest.php`
-- `NewsletterSubscription/UpdateNewsletterSubscriptionRequest.php`
-
-**Features:**
-- ✅ Comprehensive validation rules
-- ✅ Foreign key validation
-- ✅ Date range validation
-- ✅ Nested array validation (for metrics, categories)
-- ✅ Enum validation for status fields
-- ✅ Email and URL validation
-
----
-
-### 2. **API Resource Classes** - 12 Files
-Located in `app/Http/Resources/`
-
-- `ProjectResource.php` - **Includes RBAC logic for public/internal views**
-- `ProjectTeamMemberResource.php`
-- `ProjectMilestoneResource.php`
-- `ProgressReportResource.php`
-- `ReportMetricResource.php` - **Includes calculated percentage change**
-- `CropProductionResource.php`
-- `LivestockStatisticResource.php`
-- `NewsUpdateResource.php`
-- `DocumentResource.php`
-- `ContactInquiryResource.php`
-- `NewsletterSubscriptionResource.php`
-- `AuditLogResource.php`
-
-**Features:**
-- ✅ Conditional fields based on authentication (`shouldShowInternal()`)
-- ✅ Relationship eager loading with `whenLoaded()`
-- ✅ Date formatting
-- ✅ Calculated fields (e.g., change_percentage)
-- ✅ Clean JSON structure
-
----
-
-### 3. **Controllers** - 8 Files
-Located in `app/Http/Controllers/`
-
-- `ProjectController.php`
-- `ProgressReportController.php`
-- `CropProductionController.php`
-- `LivestockStatisticController.php`
-- `NewsUpdateController.php`
-- `DocumentController.php`
-- `ContactInquiryController.php`
-- `NewsletterSubscriptionController.php`
-
-**Features:**
-- ✅ Full REST API implementation (index, store, show, update, destroy)
-- ✅ Pagination support with configurable `per_page`
-- ✅ Filter support (department_id, status, fiscal_year, etc.)
-- ✅ Error handling with try-catch blocks
-- ✅ Proper HTTP status codes (201 for created, 404 for not found, 500 for errors)
-- ✅ Eager loading for related data
-- ✅ Dependency injection pattern
-
----
-
-### 4. **Service Providers** - 9 Files
-Located in `app/Providers/`
-
-- `ProjectServiceProvider.php`
-- `ProgressReportServiceProvider.php`
-- `CropProductionServiceProvider.php`
-- `LivestockStatisticServiceProvider.php`
-- `NewsUpdateServiceProvider.php`
-- `DocumentServiceProvider.php`
-- `ContactInquiryServiceProvider.php`
-- `NewsletterSubscriptionServiceProvider.php`
-- `AuditLogServiceProvider.php`
-
-**Status:** Created but need repository interface bindings configured
-
-### 5. **Repository Pattern** - 27 Files
-- ✅ 9 Repository Interfaces (`app/Interfaces/`)
-- ✅ 9 Repository Implementations (`app/Repositories/`)
-- ✅ 9 Service Classes (`app/Services/`)
-
-### 6. **Models** - 20 Files
-All Eloquent models with relationships, casts, soft deletes
-
-### 7. **Migrations** - 20 Files
-Properly sequenced (100001-100025) to avoid foreign key errors
-
-### 8. **Seeders** - 13 Files
-Complete CARAGA Region realistic data (~950+ records)
-
-### 9. **Configuration**
-- ✅ 9 Service Providers with repository bindings
-- ✅ Routes configured (52+ API endpoints)
-- ✅ Auditable trait for automatic logging
-- ✅ Base Controller
-
-### 10. **Documentation** - 4 Files
-- SETUP_GUIDE.md
-- SEEDER_DOCUMENTATION.md
-- MIGRATION_SEQUENCE.md
-- PROJECT_SUMMARY.md (this file)
-
----
-
-## 📊 Database Seeded Data
-
-### ~950+ Records Created:
-- **10** Project Types
-- **7** Project Statuses (with color codes)
-- **10** Document Categories
-- **6** Regions (CARAGA + 5 provinces with coordinates)
-- **29** Permissions
-- **7** Roles (with permission assignments)
-- **15** DA-CARAGA Departments
-- **15** Users (Filipino names, various roles)
-- **20** Agricultural Projects (₱18M - ₱125M budget)
-- **300+** Crop Production Records (2023-2025)
-- **400+** Livestock Statistics (2023-2025)
-- **15** News Updates (CARAGA initiatives)
-- **20** Documents (reports, policies, technical papers)
-
----
-
-## 🏗️ Architecture Implementation
-
-### Design Pattern: Service-Repository-Interface
-
-```
-Request → Controller → Service → Repository → Model → Database
-                                      ↓
-                              Repository Interface
-```
-
-**Benefits:**
-- ✅ Separation of concerns
-- ✅ Testability (can mock repositories)
-- ✅ Flexibility (swap implementations easily)
-- ✅ Clean code organization
-- ✅ Follows SOLID principles
-
-### Example Flow:
-
-1. **Client sends request** → `POST /api/projects`
-2. **Laravel routes** → `ProjectController@store`
-3. **Controller** → Validates using `StoreProjectRequest`
-4. **Controller** → Calls `ProjectService->create($data)`
-5. **Service** → Calls `ProjectRepository->create($data)`
-6. **Repository** → Calls `Project::create($data)`
-7. **Model** → Saves to database
-8. **Response** → Returns `ProjectResource` with HTTP 201
-
----
-
-## 🔐 Key Features Implemented
-
-### 1. Role-Based Access Control (RBAC)
-- **Public View:** Shows only: project name, brief description, status
-- **Internal View:** Shows all data including budget, team members, timelines
+### 6. Role-Based Access Control (RBAC)
+- **Public View:** Limited data (project name, description, status)
+- **Internal View:** Full data including budget, team members, timelines
 - Implementation in `ProjectResource::shouldShowInternal()`
 
-### 2. Data Validation
-- All inputs validated through Form Request classes
-- Prevents SQL injection, XSS, invalid data
-- Business rule validation (e.g., end_date must be after start_date)
-
-### 3. Error Handling
-- Try-catch blocks in all controllers
-- Meaningful error messages
-- Proper HTTP status codes
-- Prevents application crashes
-
-### 4. API Best Practices
-- RESTful endpoints
-- Resource-based responses (consistent JSON structure)
-- Pagination for list endpoints
-- Filtering and searching capabilities
-- Proper HTTP verbs (GET, POST, PUT, DELETE)
+### 7. Audit Logging
+- Automatic logging via Auditable trait
+- Tracks created/updated/deleted events
+- Records old/new values, user ID, IP address
 
 ---
 
-## 📊 Database Schema Overview
-
-### **Core Entities**
+## Database Schema Overview
 
 **Projects Module:**
-- `project_types` - Types of agricultural projects
-- `project_statuses` - Status with color codes (green/yellow/red)
-- `projects` - Main project data with location, budget, dates
-- `project_team_members` - Project staff assignments
-- `project_milestones` - Project timeline and deliverables
+- `projects`, `project_types`, `project_statuses`
+- `project_team_members`, `project_milestones`
+- `project_approvals`, `project_disbursements`
+
+**Location Module:**
+- `regions`, `provinces`, `municipalities`
 
 **KPIs & Reporting:**
-- `department_kpis` - Key performance indicators by department
-- `progress_reports` - Monthly/quarterly/annual reports
-- `report_metrics` - Detailed metrics within reports
+- `department_kpis`, `progress_reports`, `report_metrics`
 
 **Agricultural Data:**
-- `crop_productions` - Crop yields by region and year
-- `livestock_statistics` - Livestock populations
-- `funding_distributions` - Budget allocations
+- `crop_productions`, `livestock_statistics`, `funding_distributions`
 
 **Content Management:**
-- `news_updates` - News ticker and announcements
-- `documents` - Reports, policies, white papers
-- `document_categories` - Document classification
+- `news_updates`, `documents`, `document_categories`
 
 **User Engagement:**
-- `contact_inquiries` - Public feedback and inquiries
-- `newsletter_subscriptions` - Email list management
+- `contact_inquiries`, `newsletter_subscriptions`
 
 **Security & Compliance:**
-- `permissions` - System permissions
-- `role_permission` - Role-permission mapping
-- `audit_logs` - Activity tracking for compliance
+- `users`, `roles`, `permissions`, `audit_logs`
 
 ---
 
-## 🚀 Quick Start Guide
-
-### Step 1: Review What's Built
-```bash
-# Check Request classes
-ls app/Http/Requests/*/*.php
-
-# Check Resource classes
-ls app/Http/Resources/*.php
-
-# Check Controllers
-ls app/Http/Controllers/*Controller.php
-```
-
-### Step 2: Implement Data Layer
-Follow the guide in [SETUP_GUIDE.md](SETUP_GUIDE.md)
-
-1. Create all repository interfaces
-2. Create all repository implementations
-3. Create all service classes
-4. Create all models
-5. Create all migrations
-
-### Step 3: Configure Bindings
-Update all service providers to bind interfaces to implementations
-
-### Step 4: Register Providers
-Update `bootstrap/providers.php`
-
-### Step 5: Configure Routes
-Update `routes/api.php`
-
-### Step 6: Run Migrations
-```bash
-php artisan migrate
-```
-
-### Step 7: Test
-```bash
-# List all routes
-php artisan route:list
-
-# Test an endpoint
-curl http://localhost/api/projects
-```
-
----
-
-## 🚀 API Endpoints: 52+
-
-### Public Endpoints (No Authentication):
-```
-GET    /api/projects
-GET    /api/projects/{id}
-GET    /api/crop-production
-GET    /api/livestock-statistics
-GET    /api/news
-GET    /api/documents
-POST   /api/contact-inquiries
-POST   /api/newsletter
-```
-
-### Protected Endpoints (Authentication Required):
-```
-POST   /api/login
-POST   /api/logout
-
-# Full CRUD for all modules
-POST   /api/projects
-PUT    /api/projects/{id}
-DELETE /api/projects/{id}
-
-# Similar for:
-- progress-reports
-- crop-production
-- livestock-statistics
-- news
-- documents
-- audit-logs
-```
-
----
-
-## 🌏 CARAGA Region Coverage
-
-### Provinces Included:
-1. **Agusan del Norte** (AGN) - 8.9475°N, 125.5283°E
-2. **Agusan del Sur** (AGS) - 8.5567°N, 125.9800°E
-3. **Surigao del Norte** (SUN) - 9.7833°N, 125.4833°E
-4. **Surigao del Sur** (SUS) - 8.6500°N, 126.1667°E
-5. **Dinagat Islands** (DIN) - 10.1283°N, 125.6050°E
-
-### Agricultural Data:
-- **Rice:** 150,000 - 220,000 MT/year
-- **Corn:** 68,000 - 125,000 MT/year
-- **Coconut, Banana, Cacao, Coffee, Abaca**
-- **Livestock:** Cattle, Carabao, Swine, Goats, Poultry
-
----
-
-## 🔑 Default Login
-
-**Username:** `admin`
-**Password:** `Password123!`
-
-> ⚠️ **Important:** Change all default passwords in production!
-
----
-
-## 📝 Quick Setup
+## Quick Setup
 
 ```bash
 # 1. Environment
@@ -519,33 +307,44 @@ php artisan migrate:fresh --seed
 php artisan serve
 ```
 
----
+## Default Login
 
-## 📚 Documentation
+**Username:** `admin`
+**Password:** `Password123!`
 
-1. **[SETUP_GUIDE.md](SETUP_GUIDE.md)** - Quick setup & API testing
-2. **[SEEDER_DOCUMENTATION.md](SEEDER_DOCUMENTATION.md)** - Detailed seeder info
-3. **[MIGRATION_SEQUENCE.md](MIGRATION_SEQUENCE.md)** - Migration dependencies
-4. **[README.md](README.md)** - Original project requirements
+> **Important:** Change all default passwords in production!
 
 ---
 
-## ✅ Implementation Complete
+## Documentation
 
-**All systems operational:**
-- ✅ 113 files created
-- ✅ Service-Repository-Interface pattern
-- ✅ RBAC implemented
-- ✅ Audit logging functional
-- ✅ ~950+ database records seeded
-- ✅ 52+ API endpoints configured
-- ✅ Complete documentation
+- `docs/SETUP_GUIDE.md` - Quick setup & API testing
+- `docs/SEEDER_DOCUMENTATION.md` - Detailed seeder info
+- `docs/MIGRATION_SEQUENCE.md` - Migration dependencies
+- `docs/PROJECT_SUMMARY.md` - Complete project summary
 
 ---
 
-**Status: ✅ READY FOR DEPLOYMENT**
+## Implementation Summary
 
-*Version:* 1.0
-*Created:* 2025-10-06
+- 18 Controllers
+- 16 Repository Interfaces
+- 16 Repository Implementations
+- 16 Service Classes
+- 26 Eloquent Models
+- 90+ API endpoints
+- Service-Repository-Interface pattern
+- RBAC implemented
+- Audit logging functional
+- Dashboard analytics
+- Project approval workflow
+- Financial disbursement tracking
+- Notification system
+- Location hierarchy management
+
+**Status:** READY FOR DEPLOYMENT
+
+*Version:* 2.0
+*Updated:* 2026-01-28
 *Region:* CARAGA (Region XIII), Philippines
 *Department:* Department of Agriculture

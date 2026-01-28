@@ -45,7 +45,7 @@ class AuthController extends Controller
         ]);
 
         // Create access token
-        $token = $user->createToken('Personal Access Token')->accessToken;
+        $token = $user->createToken('Personal Access Token')->plainTextToken;
 
         return response()->json([
             'message' => 'User registered successfully!',
@@ -77,7 +77,7 @@ class AuthController extends Controller
         // Track last login
         $user->update(['last_login_at' => now()]);
 
-        $token = $user->createToken('Personal Access Token')->accessToken;
+        $token = $user->createToken('Personal Access Token')->plainTextToken;
 
         return response()->json([
             'message' => 'Login successful!',
@@ -91,9 +91,7 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $user = Auth::user();
-        $token = $user->token();
-        $token->revoke();
+        $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logout successful!'], 200);
     }
 
