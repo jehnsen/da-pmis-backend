@@ -108,6 +108,7 @@ class ProjectDisbursementRepository implements ProjectDisbursementRepositoryInte
             ->where('status', 'completed')
             ->select('category', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
             ->groupBy('category')
+            ->reorder() // Clear inherited ORDER BY from relationship
             ->get();
 
         $result = [];
@@ -135,6 +136,7 @@ class ProjectDisbursementRepository implements ProjectDisbursementRepositoryInte
                 DB::raw('SUM(amount) as total')
             )
             ->groupBy(DB::raw('MONTH(disbursement_date)'))
+            ->reorder() // Clear inherited ORDER BY from relationship
             ->get()
             ->keyBy('month');
 
