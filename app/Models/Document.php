@@ -23,6 +23,7 @@ class Document extends Model
         'document_type',
         'category_id',
         'department_id',
+        'project_id',
         'fiscal_year',
         'is_featured',
         'published_date',
@@ -62,6 +63,14 @@ class Document extends Model
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
+    }
+
+    /**
+     * Get the project
+     */
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
     }
 
     /**

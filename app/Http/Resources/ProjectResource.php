@@ -15,6 +15,7 @@ class ProjectResource extends JsonResource
             'department' => new DepartmentResource($this->whenLoaded('department')),
             'project_type' => $this->whenLoaded('projectType'),
             'project_status' => $this->whenLoaded('projectStatus'),
+            'budget' => $this->budget,
             'start_date' => $this->start_date?->format('Y-m-d'),
             'end_date' => $this->end_date?->format('Y-m-d'),
             'location' => $this->when($this->location_lat && $this->location_lng, [
@@ -32,6 +33,8 @@ class ProjectResource extends JsonResource
             $data['budget'] = $this->budget;
             $data['team_members'] = ProjectTeamMemberResource::collection($this->whenLoaded('teamMembers'));
             $data['milestones'] = ProjectMilestoneResource::collection($this->whenLoaded('milestones'));
+            $data['documents'] = DocumentResource::collection($this->whenLoaded('documents'));
+            $data['audit_logs'] = AuditLogResource::collection($this->whenLoaded('auditLogs'));
 
             // Approval workflow data
             $data['approval_status'] = $this->approval_status;
@@ -51,7 +54,10 @@ class ProjectResource extends JsonResource
 
     private function shouldShowInternal(): bool
     {
-        // Show internal data if user is authenticated or project is not public
-        return auth()->check() || ! $this->is_public;
+        // Show internal data if user is authenticated (via any guard) or project is not public
+        // Check all possible auth guards (sanctum for API tokens, web for sessions)
+        return auth()->guard('sanctum')->check()
+            || auth()->guard('web')->check()
+            || ! $this->is_public;
     }
 }

@@ -69,7 +69,15 @@ class ProjectController extends Controller
     {
         $proj = $this->service->getById($project);
         abort_unless($proj, 404);
-        return new ProjectResource($proj->load(['department', 'projectType', 'projectStatus', 'teamMembers.user', 'milestones']));
+        return new ProjectResource($proj->load([
+            'department',
+            'projectType',
+            'projectStatus',
+            'teamMembers.user',
+            'milestones',
+            'documents.creator',
+            'auditLogs.user'
+        ]));
     }
 
     public function update(UpdateProjectRequest $request, int $project): JsonResponse

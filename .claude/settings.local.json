@@ -14,7 +14,8 @@
       "Bash(bash:*)",
       "Bash(ls:*)",
       "Bash(composer update:*)",
-      "Bash(dir /b appHttpRequestsProject)"
+      "Bash(dir /b appHttpRequestsProject)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []

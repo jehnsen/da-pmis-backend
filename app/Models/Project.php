@@ -134,6 +134,24 @@ class Project extends Model
     }
 
     /**
+     * Get documents for this project
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class)->orderBy('published_date', 'desc');
+    }
+
+    /**
+     * Get audit logs for this project
+     */
+    public function auditLogs(): HasMany
+    {
+        return $this->hasMany(AuditLog::class, 'model_id')
+            ->where('model_type', self::class)
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
      * Get total disbursed amount
      */
     public function getTotalDisbursedAttribute(): float
