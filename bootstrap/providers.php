@@ -13,6 +13,8 @@ return [
     App\Providers\NewsletterSubscriptionServiceProvider::class,
     App\Providers\ProgressReportServiceProvider::class,
     App\Providers\ProjectServiceProvider::class,
+    App\Providers\ProjectTeamMemberServiceProvider::class,
+    App\Providers\ProjectMilestoneServiceProvider::class,
     App\Providers\UserManagementServiceProvider::class,
     App\Providers\DepartmentReportServiceProvider::class,
     App\Providers\ProjectApprovalServiceProvider::class,

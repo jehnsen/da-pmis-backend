@@ -100,7 +100,7 @@ php artisan route:list --path=api      # API routes only
 ./vendor/bin/phpunit tests/Feature/    # Feature tests only
 ```
 
-## API Routes (90+ Endpoints)
+## API Routes (101+ Endpoints)
 
 ### Public Endpoints (no auth required)
 
@@ -167,6 +167,21 @@ php artisan route:list --path=api      # API routes only
 - `GET /api/progress-reports/with-issues`
 - `GET /api/progress-reports/statistics`
 - `GET /api/projects/{id}/progress-timeline`
+
+**Project Team Members:**
+- `GET /api/projects/{id}/team-members` - List team members
+- `POST /api/projects/{id}/team-members` - Add team member
+- `GET /api/projects/{id}/team-members/{memberId}` - View team member
+- `PUT /api/projects/{id}/team-members/{memberId}` - Update role
+- `DELETE /api/projects/{id}/team-members/{memberId}` - Remove member
+
+**Project Milestones:**
+- `GET /api/projects/{id}/milestones` - List milestones with completion rate
+- `POST /api/projects/{id}/milestones` - Create milestone
+- `GET /api/projects/{id}/milestones/{milestoneId}` - View milestone
+- `PUT /api/projects/{id}/milestones/{milestoneId}` - Update milestone
+- `DELETE /api/projects/{id}/milestones/{milestoneId}` - Delete milestone
+- `POST /api/projects/{id}/milestones/{milestoneId}/complete` - Mark as completed
 
 ## Database
 
@@ -322,17 +337,18 @@ php artisan serve
 - `docs/SEEDER_DOCUMENTATION.md` - Detailed seeder info
 - `docs/MIGRATION_SEQUENCE.md` - Migration dependencies
 - `docs/PROJECT_SUMMARY.md` - Complete project summary
+- `docs/TEAM_AND_MILESTONE_API.md` - Team assignment & milestone tracking API
 
 ---
 
 ## Implementation Summary
 
-- 18 Controllers
-- 16 Repository Interfaces
-- 16 Repository Implementations
-- 16 Service Classes
+- 20 Controllers
+- 18 Repository Interfaces
+- 18 Repository Implementations
+- 18 Service Classes
 - 26 Eloquent Models
-- 90+ API endpoints
+- 101+ API endpoints
 - Service-Repository-Interface pattern
 - RBAC implemented
 - Audit logging functional
@@ -341,6 +357,8 @@ php artisan serve
 - Financial disbursement tracking
 - Notification system
 - Location hierarchy management
+- Project team assignment
+- Milestone tracking with completion rate
 
 **Status:** READY FOR DEPLOYMENT
 

@@ -19,6 +19,8 @@ use App\Http\Controllers\ProjectApprovalController;
 use App\Http\Controllers\ProjectDisbursementController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\ProjectTeamMemberController;
+use App\Http\Controllers\ProjectMilestoneController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -199,6 +201,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('progress-reports/{report}/images', [ProgressReportImageController::class, 'upload']);
         Route::put('progress-reports/{report}/images/{image}', [ProgressReportImageController::class, 'update']);
         Route::delete('progress-reports/{report}/images/{image}', [ProgressReportImageController::class, 'destroy']);
+    });
+
+    // Project Team Members
+    Route::prefix('projects/{project}')->group(function () {
+        Route::get('/team-members', [ProjectTeamMemberController::class, 'index']);
+        Route::post('/team-members', [ProjectTeamMemberController::class, 'store']);
+        Route::get('/team-members/{teamMember}', [ProjectTeamMemberController::class, 'show']);
+        Route::put('/team-members/{teamMember}', [ProjectTeamMemberController::class, 'update']);
+        Route::delete('/team-members/{teamMember}', [ProjectTeamMemberController::class, 'destroy']);
+    });
+
+    // Project Milestones
+    Route::prefix('projects/{project}')->group(function () {
+        Route::get('/milestones', [ProjectMilestoneController::class, 'index']);
+        Route::post('/milestones', [ProjectMilestoneController::class, 'store']);
+        Route::get('/milestones/{milestone}', [ProjectMilestoneController::class, 'show']);
+        Route::put('/milestones/{milestone}', [ProjectMilestoneController::class, 'update']);
+        Route::delete('/milestones/{milestone}', [ProjectMilestoneController::class, 'destroy']);
+        Route::post('/milestones/{milestone}/complete', [ProjectMilestoneController::class, 'markCompleted']);
     });
 
 });
