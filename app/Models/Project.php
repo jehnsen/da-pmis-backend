@@ -16,7 +16,11 @@ class Project extends Model
     protected $fillable = [
         'title',
         'description',
-        'department_id',
+        'department_id', // Legacy field - kept for backward compatibility
+        'sector_id', // New LGU sector alignment (RA 7160)
+        'municipality_id',
+        'province_id',
+        'barangay',
         'project_type_id',
         'project_status_id',
         'approval_status',
@@ -44,11 +48,35 @@ class Project extends Model
     ];
 
     /**
-     * Get the department that owns the project
+     * Get the department that owns the project (legacy)
      */
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
+    }
+
+    /**
+     * Get the LGU sector for this project (RA 7160)
+     */
+    public function sector(): BelongsTo
+    {
+        return $this->belongsTo(LguSector::class, 'sector_id');
+    }
+
+    /**
+     * Get the municipality where project is implemented
+     */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
+    }
+
+    /**
+     * Get the province (through municipality or direct)
+     */
+    public function province(): BelongsTo
+    {
+        return $this->belongsTo(Province::class);
     }
 
     /**
@@ -212,14 +240,15 @@ class Project extends Model
     }
 
     /**
-     * Scope for pending approval projects
+     * Scope for pending approval projects (RA 7160 levels)
      */
     public function scopePendingApproval($query)
     {
         return $query->whereIn('approval_status', [
+            'pending_barangay',
             'pending_municipal',
             'pending_provincial',
-            'pending_regional',
+            'pending_governor',
         ]);
     }
 
@@ -256,41 +285,44 @@ class Project extends Model
     }
 
     /**
-     * Check if project is pending approval
+     * Check if project is pending approval (RA 7160 levels)
      */
     public function isPendingApproval(): bool
     {
         return in_array($this->approval_status, [
+            'pending_barangay',
             'pending_municipal',
             'pending_provincial',
-            'pending_regional',
+            'pending_governor',
         ]);
     }
 
     /**
-     * Get the current pending level
+     * Get the current pending level (RA 7160 hierarchy)
      */
     public function getCurrentPendingLevel(): ?string
     {
         return match ($this->approval_status) {
+            'pending_barangay' => 'barangay',
             'pending_municipal' => 'municipal',
             'pending_provincial' => 'provincial',
-            'pending_regional' => 'regional',
+            'pending_governor' => 'governor',
             default => null,
         };
     }
 
     /**
-     * Get display name for approval status
+     * Get display name for approval status (RA 7160 terminology)
      */
     public function getApprovalStatusDisplayAttribute(): string
     {
         return match ($this->approval_status) {
             'draft' => 'Draft',
-            'pending_municipal' => 'Pending Municipal Approval',
-            'pending_provincial' => 'Pending Provincial Approval',
-            'pending_regional' => 'Pending Regional Approval',
-            'approved' => 'Approved',
+            'pending_barangay' => 'Pending Barangay Development Council Review',
+            'pending_municipal' => 'Pending Municipal Planning (MPDO) Validation',
+            'pending_provincial' => 'Pending Provincial Planning (PPDO) Review',
+            'pending_governor' => 'Pending Governor Approval',
+            'approved' => 'Approved by Governor',
             'rejected' => 'Rejected',
             default => ucfirst(str_replace('_', ' ', $this->approval_status ?? 'draft')),
         };

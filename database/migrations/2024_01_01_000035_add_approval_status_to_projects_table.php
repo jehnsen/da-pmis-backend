@@ -11,9 +11,10 @@ return new class extends Migration
         Schema::table('projects', function (Blueprint $table) {
             $table->enum('approval_status', [
                 'draft',
+                'pending_barangay',
                 'pending_municipal',
                 'pending_provincial',
-                'pending_regional',
+                'pending_governor',
                 'approved',
                 'rejected',
             ])->default('draft')->after('project_status_id');

@@ -16,34 +16,40 @@ use Illuminate\Support\Facades\DB;
 class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
 {
     /**
-     * Mapping of roles to approval levels
+     * Mapping of roles to approval levels (RA 7160 LGU Structure)
      */
     private array $roleToLevelMap = [
-        'field_officer' => 'field',
+        'barangay_officer' => 'barangay',
+        'barangay_development_council' => 'barangay',
         'municipal_officer' => 'municipal',
+        'municipal_planning_officer' => 'municipal', // MPDO
         'provincial_officer' => 'provincial',
-        'regional_director' => 'regional',
-        'admin' => 'regional', // Admin can approve at any level
-        'super_admin' => 'regional',
+        'provincial_planning_officer' => 'provincial', // PPDO
+        'governor' => 'governor',
+        'admin' => 'governor', // Admin can approve at governor level
+        'super_admin' => 'governor',
     ];
 
     /**
-     * Approval flow: current status => next status
+     * Approval flow: current status => next status (RA 7160 Chain)
+     * Barangay → Municipal (MPDO) → Provincial (PPDO) → Governor
      */
     private array $approvalFlow = [
-        'draft' => 'pending_municipal',
+        'draft' => 'pending_barangay',
+        'pending_barangay' => 'pending_municipal',
         'pending_municipal' => 'pending_provincial',
-        'pending_provincial' => 'pending_regional',
-        'pending_regional' => 'approved',
+        'pending_provincial' => 'pending_governor',
+        'pending_governor' => 'approved',
     ];
 
     /**
-     * Level to pending status mapping
+     * Level to pending status mapping (RA 7160)
      */
     private array $levelToStatusMap = [
+        'barangay' => 'pending_barangay',
         'municipal' => 'pending_municipal',
         'provincial' => 'pending_provincial',
-        'regional' => 'pending_regional',
+        'governor' => 'pending_governor',
     ];
 
     public function submitForApproval(Project $project, User $user): Project
@@ -59,7 +65,7 @@ class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
             }
 
             $fromStatus = $project->approval_status;
-            $toStatus = 'pending_municipal';
+            $toStatus = 'pending_barangay'; // RA 7160: Start at Barangay level
 
             // Update project
             $project->update([
@@ -73,7 +79,7 @@ class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
                 'project_id' => $project->id,
                 'user_id' => $user->id,
                 'action' => 'submitted',
-                'level' => 'field',
+                'level' => 'barangay', // RA 7160: Barangay Development Council
                 'from_status' => $fromStatus,
                 'to_status' => $toStatus,
                 'action_taken_at' => now(),
@@ -82,8 +88,8 @@ class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
             // Create audit log
             $this->createAuditLog($project, $user, 'submitted', $fromStatus, $toStatus);
 
-            // Send notification to municipal officers
-            $this->notifyApproversAtLevel($project, 'municipal');
+            // Send notification to barangay officers
+            $this->notifyApproversAtLevel($project, 'barangay');
 
             return $project->fresh(['department', 'projectType', 'projectStatus', 'approvals']);
         });
@@ -316,15 +322,16 @@ class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
     }
 
     /**
-     * Check if an approval can be revoked based on project's current state
+     * Check if an approval can be revoked based on project's current state (RA 7160)
      */
     private function canRevokeApproval(Project $project, ProjectApproval $approval): bool
     {
         // Map of what statuses allow revoking approvals from each level
         $allowedRevocations = [
+            'barangay' => ['pending_municipal', 'pending_barangay'],
             'municipal' => ['pending_provincial', 'pending_municipal'],
-            'provincial' => ['pending_regional', 'pending_provincial'],
-            'regional' => ['approved', 'pending_regional'],
+            'provincial' => ['pending_governor', 'pending_provincial'],
+            'governor' => ['approved', 'pending_governor'],
         ];
 
         $level = $approval->level;
@@ -430,21 +437,25 @@ class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
             return $this->roleToLevelMap[$roleName];
         }
 
-        // Check if role contains key terms
-        if (str_contains($roleName, 'admin') || str_contains($roleName, 'director')) {
-            return 'regional';
+        // Check if role contains key terms (RA 7160 hierarchy)
+        if (str_contains($roleName, 'admin') || str_contains($roleName, 'super')) {
+            return 'governor';
         }
 
-        if (str_contains($roleName, 'provincial')) {
+        if (str_contains($roleName, 'governor')) {
+            return 'governor';
+        }
+
+        if (str_contains($roleName, 'provincial') || str_contains($roleName, 'ppdo')) {
             return 'provincial';
         }
 
-        if (str_contains($roleName, 'municipal') || str_contains($roleName, 'city')) {
+        if (str_contains($roleName, 'municipal') || str_contains($roleName, 'city') || str_contains($roleName, 'mpdo')) {
             return 'municipal';
         }
 
-        if (str_contains($roleName, 'field') || str_contains($roleName, 'officer')) {
-            return 'field';
+        if (str_contains($roleName, 'barangay') || str_contains($roleName, 'bdc')) {
+            return 'barangay';
         }
 
         return null;
@@ -479,9 +490,10 @@ class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
             'total_projects' => Project::count(),
             'by_status' => [
                 'draft' => Project::where('approval_status', 'draft')->count(),
+                'pending_barangay' => Project::where('approval_status', 'pending_barangay')->count(),
                 'pending_municipal' => Project::where('approval_status', 'pending_municipal')->count(),
                 'pending_provincial' => Project::where('approval_status', 'pending_provincial')->count(),
-                'pending_regional' => Project::where('approval_status', 'pending_regional')->count(),
+                'pending_governor' => Project::where('approval_status', 'pending_governor')->count(),
                 'approved' => Project::where('approval_status', 'approved')->count(),
                 'rejected' => Project::where('approval_status', 'rejected')->count(),
             ],
@@ -507,20 +519,21 @@ class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
     }
 
     /**
-     * Get the next approval level
+     * Get the next approval level (RA 7160 Chain)
      */
     private function getNextLevel(string $currentLevel): ?string
     {
         $levelFlow = [
+            'barangay' => 'municipal',
             'municipal' => 'provincial',
-            'provincial' => 'regional',
+            'provincial' => 'governor',
         ];
 
         return $levelFlow[$currentLevel] ?? null;
     }
 
     /**
-     * Notify approvers at a specific level
+     * Notify approvers at a specific level (RA 7160 LGU Structure)
      */
     private function notifyApproversAtLevel(Project $project, string $level): void
     {
@@ -531,10 +544,26 @@ class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
                     // Match exact role names
                     $q->where('name', 'LIKE', "%{$level}%");
 
-                    // Admin can approve at any level
-                    if ($level === 'regional') {
+                    // Admin and Governor can approve at governor level
+                    if ($level === 'governor') {
                         $q->orWhere('name', 'LIKE', '%admin%')
-                            ->orWhere('name', 'LIKE', '%director%');
+                            ->orWhere('name', 'LIKE', '%governor%');
+                    }
+
+                    // Include MPDO for municipal level
+                    if ($level === 'municipal') {
+                        $q->orWhere('name', 'LIKE', '%mpdo%');
+                    }
+
+                    // Include PPDO for provincial level
+                    if ($level === 'provincial') {
+                        $q->orWhere('name', 'LIKE', '%ppdo%');
+                    }
+
+                    // Include BDC for barangay level
+                    if ($level === 'barangay') {
+                        $q->orWhere('name', 'LIKE', '%bdc%')
+                            ->orWhere('name', 'LIKE', '%barangay%');
                     }
                 });
             })->where('is_active', true)->get();

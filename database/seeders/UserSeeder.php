@@ -49,6 +49,92 @@ class UserSeeder extends Seeder
                     'updated_at' => now(),
                 ],
 
+                // Provincial Officers (Approval Workflow Level 2)
+                [
+                    'full_name' => 'Carlos Mendez-Silva',
+                    'username' => 'provincial_agusannorte',
+                    'email' => 'provincial.agusannorte@da-caraga.gov.ph',
+                    'password' => Hash::make('Password123!'),
+                    'role_id' => $roles['Provincial Officer']->id ?? null,
+                    'department_id' => $departments['Office of the Regional Executive Director']->id ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'full_name' => 'Sofia Ramirez-Torres',
+                    'username' => 'provincial_agusansur',
+                    'email' => 'provincial.agusansur@da-caraga.gov.ph',
+                    'password' => Hash::make('Password123!'),
+                    'role_id' => $roles['Provincial Officer']->id ?? null,
+                    'department_id' => $departments['Office of the Regional Executive Director']->id ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'full_name' => 'Benjamin Cruz-Flores',
+                    'username' => 'provincial_surigaonorte',
+                    'email' => 'provincial.surigaonorte@da-caraga.gov.ph',
+                    'password' => Hash::make('Password123!'),
+                    'role_id' => $roles['Provincial Officer']->id ?? null,
+                    'department_id' => $departments['Office of the Regional Executive Director']->id ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+
+                // Municipal Officers (Approval Workflow Level 1)
+                [
+                    'full_name' => 'Rafael Santos-Aquino',
+                    'username' => 'municipal_butuan',
+                    'email' => 'municipal.butuan@da-caraga.gov.ph',
+                    'password' => Hash::make('Password123!'),
+                    'role_id' => $roles['Municipal Officer']->id ?? null,
+                    'department_id' => $departments['Field Operations Division']->id ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'full_name' => 'Isabella Garcia-Reyes',
+                    'username' => 'municipal_cabadbaran',
+                    'email' => 'municipal.cabadbaran@da-caraga.gov.ph',
+                    'password' => Hash::make('Password123!'),
+                    'role_id' => $roles['Municipal Officer']->id ?? null,
+                    'department_id' => $departments['Field Operations Division']->id ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'full_name' => 'Gabriel Fernandez-Lopez',
+                    'username' => 'municipal_surigao',
+                    'email' => 'municipal.surigao@da-caraga.gov.ph',
+                    'password' => Hash::make('Password123!'),
+                    'role_id' => $roles['Municipal Officer']->id ?? null,
+                    'department_id' => $departments['Field Operations Division']->id ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+
+                // Field Officers (Project Submission & Field Operations)
+                [
+                    'full_name' => 'Diana Rodriguez-Castro',
+                    'username' => 'field_bunawan',
+                    'email' => 'field.bunawan@da-caraga.gov.ph',
+                    'password' => Hash::make('Password123!'),
+                    'role_id' => $roles['Field Officer']->id ?? null,
+                    'department_id' => $departments['Field Operations Division']->id ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'full_name' => 'Marco Villa-Santos',
+                    'username' => 'field_bayugan',
+                    'email' => 'field.bayugan@da-caraga.gov.ph',
+                    'password' => Hash::make('Password123!'),
+                    'role_id' => $roles['Field Officer']->id ?? null,
+                    'department_id' => $departments['Field Operations Division']->id ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+
                 // Department Heads
                 [
                     'full_name' => 'Roberto Villanueva',

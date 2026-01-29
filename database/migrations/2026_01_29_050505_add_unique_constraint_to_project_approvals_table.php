@@ -23,9 +23,10 @@ return new class extends Migration
         ");
 
         Schema::table('project_approvals', function (Blueprint $table) {
-            // Add unique constraint to prevent duplicate approvals at the same level
+            // Add unique constraint to prevent duplicate approvals at the same level and time
             // This prevents race conditions where two officers approve simultaneously
-            $table->unique(['project_id', 'level', 'action'], 'unique_project_level_action');
+            // Includes action_taken_at to allow resubmissions after changes are requested
+            $table->unique(['project_id', 'level', 'action', 'action_taken_at'], 'unique_project_level_action');
         });
     }
 

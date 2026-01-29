@@ -120,15 +120,15 @@ class ProjectApproval extends Model
     }
 
     /**
-     * Get the display name for the level
+     * Get the display name for the level (RA 7160 LGU Hierarchy)
      */
     public function getLevelDisplayAttribute(): string
     {
         return match ($this->level) {
-            'field' => 'Field Officer',
-            'municipal' => 'Municipal Officer',
-            'provincial' => 'Provincial Officer',
-            'regional' => 'Regional Director',
+            'barangay' => 'Barangay Development Council',
+            'municipal' => 'Municipal Planning & Development Office (MPDO)',
+            'provincial' => 'Provincial Planning & Development Office (PPDO)',
+            'governor' => 'Office of the Provincial Governor',
             default => ucfirst($this->level),
         };
     }

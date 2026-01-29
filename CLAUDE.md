@@ -1,6 +1,6 @@
 ## Project Overview
 
-**DA-PMIS** (Department of Agriculture - Performance Management Information System) is a Laravel 11 backend API for the CARAGA Region (Region XIII), Philippines. It manages agricultural projects, crop/livestock statistics, progress reports, dashboard analytics, project approvals, financial disbursements, and public engagement.
+**DA-PMIS** (Department of Agriculture - Performance Management Information System) is a Laravel 11 backend API that has evolved into a **Provincial LGU Governance Intelligence Platform** for the CARAGA Region (Region XIII), Philippines. Originally focused on agricultural projects, the system now implements **RA 7160 (Local Government Code of 1991)** compliance with multi-sector provincial governance covering Social Services, Economic Services, Infrastructure & Environmental Management, and General Public Services. It manages projects, crop/livestock statistics, progress reports, dashboard analytics, project approvals, financial disbursements, and public engagement.
 
 ## Tech Stack
 
@@ -16,12 +16,12 @@ app/
 ├── Classes/           # Utility classes (ApiResponseClass)
 ├── Enums/             # Enumerations (IncidentSeverity, IncidentStatus)
 ├── Http/
-│   ├── Controllers/   # 18 API controllers
+│   ├── Controllers/   # 22 API controllers
 │   ├── Middleware/    # ForceJsonResponse middleware
 │   ├── Requests/      # Form request validation (Store/Update pairs)
 │   └── Resources/     # API resource transformers
 ├── Interfaces/        # 16 Repository interfaces
-├── Models/            # 26 Eloquent models
+├── Models/            # 30 Eloquent models (includes LguSector)
 ├── Providers/         # Service providers (interface bindings)
 ├── Repositories/      # 16 Repository implementations
 ├── Services/          # 16 Business logic services
@@ -60,17 +60,24 @@ Each module follows this pattern:
 | `NotificationController` | User notification system |
 | `ContactInquiryController` | Public contact form management |
 | `NewsletterSubscriptionController` | Newsletter subscription management |
+| `ProjectTeamMemberController` | Project team assignments |
+| `ProjectMilestoneController` | Project milestone tracking |
+| `ProjectImageController` | Project image uploads |
+| `ProgressReportImageController` | Progress report image uploads |
 
 ## Key Models
 
-- **Project** - Main entity with budget, timeline, location, team members, milestones
-- **ProjectApproval** - Approval workflow records
+- **Project** - Main entity with budget, timeline, location, team members, milestones, sector, municipality, barangay
+- **ProjectApproval** - RA 7160 approval workflow (Barangay → Municipal → Provincial → Governor)
 - **ProjectDisbursement** - Financial disbursements per project
+- **LguSector** - Four LGU sectors (SS, ES, IEM, GPS) with budget tracking
 - **Department** - Organizational units with KPIs
-- **ProgressReport** - Periodic reports with metrics
+- **ProgressReport** - Periodic reports with metrics and images
 - **CropProduction** / **LivestockStatistic** - Agricultural data
 - **Region** / **Province** / **Municipality** - Location hierarchy
 - **NewsUpdate** / **Document** - Content management
+- **ProjectTeamMember** - Team assignments with roles
+- **ProjectMilestone** - Timeline deliverables
 - **User** - Authentication with roles and permissions
 - **AuditLog** - Change tracking via Auditable trait
 
@@ -256,12 +263,13 @@ Key `.env` variables:
 - Recent project updates
 - Monthly progress tracking
 
-### 2. Project Approval Workflow
-- Submit projects for approval
-- Multi-level approval process
-- Request changes before approval
-- Track approval history
+### 2. Project Approval Workflow (RA 7160 Compliant)
+- **4-Level Approval Chain**: Barangay → Municipal (MPDO) → Provincial (PPDO) → Governor
+- Submit projects for approval at Barangay Development Council level
+- Each level can approve, reject, or request changes
+- Complete approval history tracking
 - Statistics on approval workflow
+- Compliant with Local Government Code of 1991
 
 ### 3. Project Disbursements
 - Track financial disbursements per project
@@ -289,17 +297,30 @@ Key `.env` variables:
 - Tracks created/updated/deleted events
 - Records old/new values, user ID, IP address
 
+### 8. LGU Multi-Sector Governance (RA 7160)
+- **SS (Social Services)**: Health, Education, Social Welfare
+- **ES (Economic Services)**: Agriculture, Tourism, Trade & Industry
+- **IEM (Infrastructure & Environmental Management)**: Public Works, Utilities, DRRM
+- **GPS (General Public Services)**: Planning, Legal, Budget, Administration
+- Sector-based budget tracking and utilization rates
+- Geographic routing through Municipality → Province → Barangay
+
 ---
 
 ## Database Schema Overview
 
 **Projects Module:**
-- `projects`, `project_types`, `project_statuses`
+- `projects` (with sector_id, municipality_id, province_id, barangay fields)
+- `project_types`, `project_statuses`
 - `project_team_members`, `project_milestones`
-- `project_approvals`, `project_disbursements`
+- `project_approvals` (RA 7160 levels: barangay, municipal, provincial, governor)
+- `project_disbursements`
 
 **Location Module:**
 - `regions`, `provinces`, `municipalities`
+
+**LGU Governance Module:**
+- `lgu_sectors` (4 sectors: SS, ES, IEM, GPS)
 
 **KPIs & Reporting:**
 - `department_kpis`, `progress_reports`, `report_metrics`
@@ -354,25 +375,32 @@ php artisan serve
 - `docs/TEAM_AND_MILESTONE_API.md` - Team assignment & milestone tracking API
 - `docs/CRITICAL_METRICS_API.md` - Core COA/DBM/NEDA compliance metrics (5 endpoints)
 - `docs/ADDITIONAL_CRITICAL_METRICS_API.md` - Risk management & impact metrics (5 endpoints)
+- `docs/RA_7160_REFACTORING_GUIDE.md` - Complete RA 7160 implementation guide
+- `docs/MIGRATION_IMPLEMENTATION_SUMMARY.md` - LGU structure migration details
+- `FRESH_INSTALL_GUIDE.md` - Step-by-step setup for new installations
+- `DEPLOY_LGU_PLATFORM.md` - Production deployment guide
+- `REFACTORING_COMPLETE.md` - RA 7160 refactoring summary
 
 ---
 
 ## Implementation Summary
 
-- 20 Controllers
-- 18 Repository Interfaces
-- 18 Repository Implementations
-- 18 Service Classes
-- 26 Eloquent Models
-- 111+ API endpoints (includes 10 critical government compliance & risk management metrics)
+- **22 Controllers** (added ProjectTeamMember, ProjectMilestone, ProjectImage, ProgressReportImage)
+- **16 Repository Interfaces**
+- **16 Repository Implementations**
+- **16 Service Classes**
+- **30 Eloquent Models** (added LguSector + 3 others)
+- **111+ API endpoints** (includes 10 critical government compliance & risk management metrics)
+- **RA 7160 Compliant** - Full Local Government Code implementation
+- **4 LGU Sectors** - Multi-sector governance (SS, ES, IEM, GPS)
+- **4-Level Approval Chain** - Barangay → Municipal → Provincial → Governor
 - Service-Repository-Interface pattern
 - RBAC implemented
 - Audit logging functional
 - Dashboard analytics with government compliance metrics
-- Project approval workflow
 - Financial disbursement tracking
 - Notification system
-- Location hierarchy management
+- Location hierarchy management with barangay support
 - Project team assignment
 - Milestone tracking with completion rate
 - COA/DBM/NEDA compliance reporting
@@ -382,7 +410,8 @@ php artisan serve
 
 **Status:** READY FOR DEPLOYMENT
 
-*Version:* 2.0
-*Updated:* 2026-01-28
+*Version:* 3.0 - Provincial LGU Governance Platform (RA 7160 Compliant)
+*Updated:* 2026-01-30
 *Region:* CARAGA (Region XIII), Philippines
-*Department:* Department of Agriculture
+*Original Focus:* Department of Agriculture
+*Current Scope:* Multi-sector Provincial LGU Governance (Social Services, Economic Services, Infrastructure & Environmental Management, General Public Services)
