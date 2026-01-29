@@ -9,50 +9,196 @@
 
 ## Collection Overview
 
-The collection contains **52+ API endpoints** organized into 7 main categories:
+The collection contains **60+ API endpoints** organized into 11 main categories:
 
-### 1. Authentication (2 endpoints)
+### 1. Authentication (4 endpoints)
+- **Register** - Register new user account
 - **Login** - Get authentication token
+- **Get Current User** - Get authenticated user details
 - **Logout** - Invalidate token
 
-### 2. Projects (6 endpoints)
+### 2. Dashboard (6 endpoints)
+- Overview Stats
+- Budget Allocation
+- Project Status Distribution
+- National Performance
+- Recent Updates
+- Monthly Progress
+
+### 3. Locations (9 endpoints)
+- Get All Regions/Provinces/Municipalities
+- Get by ID (Region/Province/Municipality)
+- Location Hierarchy
+- Search Locations
+- Location Statistics
+
+### 4. Projects (6 endpoints)
 - Get All Projects (Public & Authenticated views)
 - Get Project by ID
 - Create Project
 - Update Project
 - Delete Project
 
-### 3. Progress Reports (5 endpoints)
+### 5. Project Approval Workflow (8 endpoints)
+- Get Pending Approvals
+- Get Approval Statistics
+- Get Projects by Approval Status
+- Submit for Approval
+- Approve Project
+- Reject Project
+- Request Changes
+- Get Approval History
+- **Get Project Audit Logs** (NEW)
+
+### 6. Project Disbursements (10 endpoints)
+- Get Disbursement Categories
+- Get/Create/Update/Delete Disbursements
+- Approve/Cancel Disbursement
+- Financial Summary
+- Disbursements by Category
+- Monthly Spending
+
+### 7. Project Files & Images (4 endpoints) **NEW**
+- **Get Project Images** - With pagination and filtering
+- **Upload Project Images** - Multiple upload support
+- **Update Image Details** - Caption, type, display order
+- **Delete Project Image** - Remove image and file
+
+### 8. Progress Reports (8 endpoints)
 - Get All Progress Reports
+- Get Reports with Issues
+- Get Progress Report Statistics
 - Get Progress Report by ID
 - Create Progress Report
 - Update Progress Report
 - Delete Progress Report
+- Get Project Progress Timeline
 
-### 4. Agricultural Data (10 endpoints)
-#### Crop Production (5 endpoints)
-- Get All, Get by ID, Create, Update, Delete
+### 9. Departments (9 endpoints)
+- Get All Departments
+- Get/Create/Update/Delete Department
+- Get Department Reports
+- Get Budget Utilization
+- Get Department Monthly Progress
+- Get Department KPI Summary
 
-#### Livestock Statistics (5 endpoints)
-- Get All, Get by ID, Create, Update, Delete
+### 10. Agricultural Data (8 endpoints)
+#### Crop Production (4 endpoints)
+- Get All, Create, Update, Delete
 
-### 5. News & Documents (10 endpoints)
+#### Livestock Statistics (4 endpoints)
+- Get All, Create, Update, Delete
+
+### 11. News & Documents (11 endpoints)
 #### News Updates (5 endpoints)
 - Get All News, Get by ID, Create, Update, Delete
 
-#### Documents (5 endpoints)
-- Get All Documents, Get by ID, Create, Update, Delete
+#### Documents (6 endpoints)
+- Get All Documents, Get Featured, Get by ID, Download, Create, Update, Delete
 
-### 6. User Engagement (8 endpoints)
-#### Contact Inquiries (4 endpoints)
-- Get All, Submit (Public), Update Status, Delete
+### 12. User Management (7 endpoints)
+- Get All Users
+- Get User Statistics
+- Get/Create/Update/Delete User
+- Toggle User Status
 
-#### Newsletter Subscriptions (4 endpoints)
-- Get All, Subscribe (Public), Update, Delete
+### 13. Notifications (6 endpoints)
+- Get All Notifications
+- Get Unread Count
+- Mark as Read
+- Mark All as Read
+- Delete Notification
+- Clear All Notifications
 
-### 7. Audit Logs (2 endpoints)
-- Get All Audit Logs (with filters)
-- Get Audit Log by ID
+### 14. User Engagement (8 endpoints)
+#### Contact Inquiries (5 endpoints)
+- Get All, Get by ID, Submit (Public), Update Status, Delete
+
+#### Newsletter Subscriptions (5 endpoints)
+- Get All, Get by ID, Subscribe (Public), Update, Delete
+
+---
+
+## New Features (2026-01-29)
+
+### Project Audit Logs Endpoint
+**GET** `/api/projects/{id}/audit-logs`
+
+Track all changes made to a project with full audit history:
+- **Pagination**: 1-100 items per page
+- **Filter by action**: Search for specific actions (created, updated, deleted)
+- **Filter by user**: See changes made by specific users
+- **Date range filtering**: Filter by date_from and date_to
+- **User details included**: Automatically includes username and full name
+
+**Example Request:**
+```
+GET /api/projects/1/audit-logs?per_page=20&action=updated&date_from=2024-01-01
+```
+
+**Response Format:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 123,
+      "user_id": 1,
+      "action": "project_updated",
+      "old_values": {...},
+      "new_values": {...},
+      "ip_address": "127.0.0.1",
+      "created_at": "2024-03-15T10:30:00Z",
+      "user": {
+        "id": 1,
+        "username": "admin",
+        "full_name": "Juan Dela Cruz"
+      }
+    }
+  ],
+  "meta": {...},
+  "links": {...}
+}
+```
+
+### Project Images Endpoint (Enhanced)
+**GET** `/api/projects/{id}/images`
+
+Retrieve and manage project images with advanced filtering:
+- **Pagination**: 1-100 images per page
+- **Filter by type**: cover, progress, documentation, before, after, other
+- **Ordered display**: Sorted by display_order automatically
+- **Uploader details**: Includes who uploaded each image
+- **Full URLs**: Returns complete image URLs ready for display
+
+**Image Types:**
+- `cover` - Cover/featured image for the project
+- `progress` - Progress photos during implementation
+- `documentation` - Documentation and reference images
+- `before` - Before photos (baseline)
+- `after` - After photos (completed)
+- `other` - Other/miscellaneous images
+
+**Upload Support:**
+- Maximum 10 images per upload
+- Max file size: 5MB per image
+- Supported formats: JPEG, JPG, PNG, GIF, WebP
+- Automatic file storage and URL generation
+
+**Example Request:**
+```
+GET /api/projects/1/images?per_page=10&image_type=progress
+```
+
+**Example Upload:**
+```
+POST /api/projects/1/images
+Content-Type: multipart/form-data
+
+images[]: [file1.jpg, file2.png]
+captions[]: ["Site preparation", "Foundation work"]
+image_types[]: ["progress", "progress"]
+```
 
 ---
 
@@ -108,12 +254,16 @@ Every request includes realistic sample data based on CARAGA Region:
 
 ### Query Parameters
 Endpoints with filters include pre-configured query parameters:
-- `per_page` - Pagination
+- `per_page` - Pagination (1-100 items)
 - `department_id` - Filter by department
 - `project_status_id` - Filter by status
 - `fiscal_year` - Filter by year
 - `crop_name` - Filter by crop
 - `livestock_type` - Filter by livestock type
+- **`action`** - Filter audit logs by action type (NEW)
+- **`user_id`** - Filter audit logs by user (NEW)
+- **`date_from`** / **`date_to`** - Date range filtering (NEW)
+- **`image_type`** - Filter images by type (NEW)
 
 ---
 
@@ -171,6 +321,27 @@ GET All → GET by ID → CREATE → UPDATE → DELETE
    - `crop_name=Rice`
    - `fiscal_year=2025`
 3. **Expected:** Filtered results
+
+### Scenario 6: Track Project Changes (Audit Logs)
+1. **Authentication:** Login with admin credentials
+2. **Request:** GET Project Audit Logs
+3. **URL:** `/api/projects/1/audit-logs`
+4. **Query Params:**
+   - `per_page=20`
+   - `action=updated`
+   - `date_from=2024-01-01`
+5. **Expected:** Paginated audit log entries with user details
+
+### Scenario 7: Upload and Manage Project Images
+1. **Authentication:** Login first
+2. **Request:** POST Upload Project Images
+3. **URL:** `/api/projects/1/images`
+4. **Body (form-data):**
+   - `images[]` - Select multiple image files
+   - `captions[]` - "Before construction", "Site preparation"
+   - `image_types[]` - "before", "progress"
+5. **Expected:** 201 Created with uploaded image details
+6. **Follow-up:** GET Project Images to verify upload
 
 ---
 
@@ -335,6 +506,29 @@ For issues or questions:
 
 ---
 
-**Collection Version:** 1.0
-**Last Updated:** 2025-10-06
-**Total Endpoints:** 52+
+**Collection Version:** 2.0
+**Last Updated:** 2026-01-29
+**Total Endpoints:** 100+
+
+## Changelog
+
+### Version 2.0 (2026-01-29)
+- ✅ Added Project Audit Logs endpoint with filtering
+- ✅ Enhanced Project Images endpoint with pagination and type filtering
+- ✅ Added 11 main endpoint categories (was 7)
+- ✅ Migrated from Passport to Sanctum authentication
+- ✅ Added Project Team Members endpoints (CRUD)
+- ✅ Added Project Milestones endpoints (CRUD + completion tracking)
+- ✅ Added comprehensive Dashboard analytics endpoints
+- ✅ Added Location management endpoints (hierarchy, search, statistics)
+- ✅ Added Project Approval Workflow endpoints (multi-level approval)
+- ✅ Added Project Disbursements & Financial tracking
+- ✅ Added User Management endpoints
+- ✅ Added Notifications system
+- ✅ Total endpoints: 100+
+
+### Version 1.0 (2025-10-06)
+- Initial collection release
+- Basic CRUD operations for Projects, Progress Reports, Agricultural Data
+- Authentication with Laravel Passport
+- Total endpoints: 52

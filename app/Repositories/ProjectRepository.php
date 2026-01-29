@@ -133,6 +133,24 @@ class ProjectRepository implements ProjectRepositoryInterface
     {
         $project = $this->find($id);
         if ($project) {
+            // Prevent editing projects that are in the approval workflow
+            if ($project->isPendingApproval()) {
+                throw new \Exception(
+                    'Cannot edit project while it is pending approval. ' .
+                    'Current status: ' . $project->approval_status_display . '. ' .
+                    'Please wait for approval to complete or request the project to be sent back to draft.'
+                );
+            }
+
+            // Prevent editing approved projects without proper workflow
+            if ($project->isApproved()) {
+                throw new \Exception(
+                    'Cannot edit approved project. ' .
+                    'Approved projects are locked to maintain audit trail integrity. ' .
+                    'Please contact an administrator if changes are needed.'
+                );
+            }
+
             $project->update($data);
             return $project->fresh();
         }

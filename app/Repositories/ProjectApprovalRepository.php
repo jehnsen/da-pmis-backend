@@ -49,6 +49,15 @@ class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
     public function submitForApproval(Project $project, User $user): Project
     {
         return DB::transaction(function () use ($project, $user) {
+            // Prevent re-submission of projects already in approval workflow
+            if ($project->isPendingApproval()) {
+                throw new \Exception(
+                    'Project is already in the approval workflow. ' .
+                    'Current status: ' . $project->approval_status_display . '. ' .
+                    'Cannot re-submit until approval process completes.'
+                );
+            }
+
             $fromStatus = $project->approval_status;
             $toStatus = 'pending_municipal';
 
@@ -83,9 +92,26 @@ class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
     public function approve(Project $project, User $user, string $level, ?string $comments = null): Project
     {
         return DB::transaction(function () use ($project, $user, $level, $comments) {
+            // Apply pessimistic locking to prevent race conditions
+            $project = Project::where('id', $project->id)->lockForUpdate()->first();
+
+            if (!$project) {
+                throw new \Exception('Project not found or locked by another transaction');
+            }
+
             $fromStatus = $project->approval_status;
             $toStatus = $this->getNextApprovalStatus($fromStatus);
             $isFinalApproval = $toStatus === 'approved';
+
+            // Verify the project is still in the expected state
+            if (!$project->isPendingApproval()) {
+                throw new \Exception('Project is no longer pending approval');
+            }
+
+            // Verify the user can still approve at this level
+            if ($project->getCurrentPendingLevel() !== $level) {
+                throw new \Exception("Project is not pending at {$level} level");
+            }
 
             // Update project
             $project->update([
@@ -125,8 +151,25 @@ class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
     public function reject(Project $project, User $user, string $level, string $comments, ?string $reason = null): Project
     {
         return DB::transaction(function () use ($project, $user, $level, $comments, $reason) {
+            // Apply pessimistic locking to prevent race conditions
+            $project = Project::where('id', $project->id)->lockForUpdate()->first();
+
+            if (!$project) {
+                throw new \Exception('Project not found or locked by another transaction');
+            }
+
             $fromStatus = $project->approval_status;
             $toStatus = 'rejected';
+
+            // Verify the project is still in the expected state
+            if (!$project->isPendingApproval()) {
+                throw new \Exception('Project is no longer pending approval');
+            }
+
+            // Verify the user can still reject at this level
+            if ($project->getCurrentPendingLevel() !== $level) {
+                throw new \Exception("Project is not pending at {$level} level");
+            }
 
             // Update project
             $project->update([
@@ -159,8 +202,25 @@ class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
     public function requestChanges(Project $project, User $user, string $level, string $comments): Project
     {
         return DB::transaction(function () use ($project, $user, $level, $comments) {
+            // Apply pessimistic locking to prevent race conditions
+            $project = Project::where('id', $project->id)->lockForUpdate()->first();
+
+            if (!$project) {
+                throw new \Exception('Project not found or locked by another transaction');
+            }
+
             $fromStatus = $project->approval_status;
             $toStatus = 'draft'; // Send back to draft for revisions
+
+            // Verify the project is still in the expected state
+            if (!$project->isPendingApproval()) {
+                throw new \Exception('Project is no longer pending approval');
+            }
+
+            // Verify the user can still request changes at this level
+            if ($project->getCurrentPendingLevel() !== $level) {
+                throw new \Exception("Project is not pending at {$level} level");
+            }
 
             // Update project
             $project->update([
@@ -187,6 +247,115 @@ class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
 
             return $project->fresh(['department', 'projectType', 'projectStatus', 'approvals']);
         });
+    }
+
+    public function revokeApproval(Project $project, int $approvalId, User $user, string $reason): Project
+    {
+        return DB::transaction(function () use ($project, $approvalId, $user, $reason) {
+            // Apply pessimistic locking
+            $project = Project::where('id', $project->id)->lockForUpdate()->first();
+
+            if (!$project) {
+                throw new \Exception('Project not found or locked by another transaction');
+            }
+
+            // Find the approval record
+            $approval = ProjectApproval::where('id', $approvalId)
+                ->where('project_id', $project->id)
+                ->where('action', 'approved')
+                ->where('is_revoked', false)
+                ->first();
+
+            if (!$approval) {
+                throw new \Exception('Approval record not found or already revoked');
+            }
+
+            // Only the approver or admin can revoke
+            $isAdmin = $user->role && str_contains(strtolower($user->role->name), 'admin');
+            if ($approval->user_id !== $user->id && !$isAdmin) {
+                throw new \Exception('You can only revoke your own approvals');
+            }
+
+            // Check time window (24 hours by default, configurable)
+            $revocationWindowHours = config('app.approval_revocation_window_hours', 24);
+            $approvalAge = $approval->action_taken_at->diffInHours(now());
+            if ($approvalAge > $revocationWindowHours && !$isAdmin) {
+                throw new \Exception("Approval can only be revoked within {$revocationWindowHours} hours. This approval was made {$approvalAge} hours ago.");
+            }
+
+            // Can only revoke if the project is still at the next level or hasn't moved too far
+            $canRevoke = $this->canRevokeApproval($project, $approval);
+            if (!$canRevoke) {
+                throw new \Exception('Cannot revoke this approval as the project has progressed too far in the workflow');
+            }
+
+            $fromStatus = $project->approval_status;
+            $toStatus = $approval->from_status; // Revert to the status before this approval
+
+            // Mark approval as revoked
+            $approval->update([
+                'is_revoked' => true,
+                'revoked_by' => $user->id,
+                'revoked_at' => now(),
+                'revocation_reason' => $reason,
+            ]);
+
+            // Revert project status
+            $project->update([
+                'approval_status' => $toStatus,
+            ]);
+
+            // Create audit log
+            $this->createAuditLog($project, $user, 'revoked_approval', $fromStatus, $toStatus, $reason);
+
+            // Notify relevant parties
+            $this->notifyApprovalRevoked($project, $approval, $user, $reason);
+
+            return $project->fresh(['department', 'projectType', 'projectStatus', 'approvals']);
+        });
+    }
+
+    /**
+     * Check if an approval can be revoked based on project's current state
+     */
+    private function canRevokeApproval(Project $project, ProjectApproval $approval): bool
+    {
+        // Map of what statuses allow revoking approvals from each level
+        $allowedRevocations = [
+            'municipal' => ['pending_provincial', 'pending_municipal'],
+            'provincial' => ['pending_regional', 'pending_provincial'],
+            'regional' => ['approved', 'pending_regional'],
+        ];
+
+        $level = $approval->level;
+        $currentStatus = $project->approval_status;
+
+        if (!isset($allowedRevocations[$level])) {
+            return false;
+        }
+
+        return in_array($currentStatus, $allowedRevocations[$level]);
+    }
+
+    /**
+     * Notify relevant parties about approval revocation
+     */
+    private function notifyApprovalRevoked(Project $project, ProjectApproval $approval, User $revoker, string $reason): void
+    {
+        try {
+            // Notify the project submitter
+            if ($project->submitter) {
+                \Log::info("Approval revoked for project {$project->id} by user {$revoker->id}. Reason: {$reason}");
+            }
+
+            // Notify approvers at the reverted level
+            $level = $project->getCurrentPendingLevel();
+            if ($level) {
+                $this->notifyApproversAtLevel($project, $level);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send revocation notifications: '.$e->getMessage());
+        }
     }
 
     public function getPendingApprovalForUser(User $user, int $perPage = 15)
@@ -290,11 +459,9 @@ class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
             return false;
         }
 
-        // Admin can approve at any level
-        if ($user->role && str_contains(strtolower($user->role->name), 'admin')) {
-            return true;
-        }
-
+        // SECURITY FIX: Admins must follow proper approval workflow
+        // They cannot skip levels to maintain audit trail integrity
+        // Admins are mapped to 'regional' level and must wait for municipal/provincial approvals
         return $userLevel === $projectLevel;
     }
 

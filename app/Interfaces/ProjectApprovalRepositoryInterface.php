@@ -28,6 +28,11 @@ interface ProjectApprovalRepositoryInterface
     public function requestChanges(Project $project, User $user, string $level, string $comments): Project;
 
     /**
+     * Revoke an approval (undo within time window)
+     */
+    public function revokeApproval(Project $project, int $approvalId, User $user, string $reason): Project;
+
+    /**
      * Get projects pending approval for a user based on their role
      */
     public function getPendingApprovalForUser(User $user, int $perPage = 15);

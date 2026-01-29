@@ -60,6 +60,20 @@ Route::prefix('dashboard')->group(function () {
     Route::get('national-performance', [DashboardController::class, 'nationalPerformance']);
     Route::get('recent-updates', [DashboardController::class, 'recentUpdates']);
     Route::get('monthly-progress', [DashboardController::class, 'monthlyProgress']);
+
+    // Critical COA, DBM, and NEDA Compliance Metrics
+    Route::get('physical-financial-variance', [DashboardController::class, 'physicalFinancialVariance']);
+    Route::get('budget-variance-heatmap', [DashboardController::class, 'budgetVarianceHeatmap']);
+    Route::get('milestone-completion-tracker', [DashboardController::class, 'milestoneCompletionTracker']);
+    Route::get('target-achievement-kpi', [DashboardController::class, 'targetAchievementKpi']);
+    Route::get('cost-efficiency-metrics', [DashboardController::class, 'costEfficiencyMetrics']);
+
+    // Additional Critical Metrics (Risk Management & Proactive Monitoring)
+    Route::get('risk-dashboard', [DashboardController::class, 'riskDashboard']);
+    Route::get('beneficiary-impact-metrics', [DashboardController::class, 'beneficiaryImpactMetrics']);
+    Route::get('compliance-scorecard', [DashboardController::class, 'complianceScorecard']);
+    Route::get('year-over-year-trends', [DashboardController::class, 'yearOverYearTrends']);
+    Route::get('early-warning-alerts', [DashboardController::class, 'earlyWarningAlerts']);
 });
 
 // Location Management (Public endpoints for filtering)
@@ -102,6 +116,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{project}/reject', [ProjectApprovalController::class, 'reject']);
         Route::post('/{project}/request-changes', [ProjectApprovalController::class, 'requestChanges']);
         Route::get('/{project}/approval-history', [ProjectApprovalController::class, 'approvalHistory']);
+        Route::get('/{project}/audit-logs', [ProjectController::class, 'auditLogs']);
     });
 
     // Progress Reports
@@ -201,6 +216,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('progress-reports/{report}/images', [ProgressReportImageController::class, 'upload']);
         Route::put('progress-reports/{report}/images/{image}', [ProgressReportImageController::class, 'update']);
         Route::delete('progress-reports/{report}/images/{image}', [ProgressReportImageController::class, 'destroy']);
+
+        // Storage Management
+        Route::get('storage/stats', [ProjectImageController::class, 'storageStats']);
     });
 
     // Project Team Members

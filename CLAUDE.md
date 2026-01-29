@@ -100,7 +100,7 @@ php artisan route:list --path=api      # API routes only
 ./vendor/bin/phpunit tests/Feature/    # Feature tests only
 ```
 
-## API Routes (101+ Endpoints)
+## API Routes (111+ Endpoints)
 
 ### Public Endpoints (no auth required)
 
@@ -114,6 +114,20 @@ php artisan route:list --path=api      # API routes only
 - `GET /api/dashboard/national-performance` - Production metrics
 - `GET /api/dashboard/recent-updates` - Recent project updates
 - `GET /api/dashboard/monthly-progress` - Monthly progress by department
+
+**Critical Government Compliance Metrics (COA/DBM/NEDA):**
+- `GET /api/dashboard/physical-financial-variance` - Physical vs financial progress variance (COA)
+- `GET /api/dashboard/budget-variance-heatmap` - Budget utilization by department (DBM)
+- `GET /api/dashboard/milestone-completion-tracker` - Timeline compliance tracking (NEDA)
+- `GET /api/dashboard/target-achievement-kpi` - Target vs achievement KPIs (Performance Management)
+- `GET /api/dashboard/cost-efficiency-metrics` - Cost per beneficiary/hectare/MT (DBM)
+
+**Additional Risk Management & Impact Metrics:**
+- `GET /api/dashboard/risk-dashboard` - Project risk assessment (COA proactive management)
+- `GET /api/dashboard/beneficiary-impact-metrics` - Outcome vs output tracking (Justifies funding)
+- `GET /api/dashboard/compliance-scorecard` - COA audit readiness check
+- `GET /api/dashboard/year-over-year-trends` - 3-year performance trends
+- `GET /api/dashboard/early-warning-alerts` - Proactive problem detection (2-3 months early)
 
 **Location Management:**
 - `GET /api/locations/regions`, `/provinces`, `/municipalities`
@@ -338,6 +352,8 @@ php artisan serve
 - `docs/MIGRATION_SEQUENCE.md` - Migration dependencies
 - `docs/PROJECT_SUMMARY.md` - Complete project summary
 - `docs/TEAM_AND_MILESTONE_API.md` - Team assignment & milestone tracking API
+- `docs/CRITICAL_METRICS_API.md` - Core COA/DBM/NEDA compliance metrics (5 endpoints)
+- `docs/ADDITIONAL_CRITICAL_METRICS_API.md` - Risk management & impact metrics (5 endpoints)
 
 ---
 
@@ -348,17 +364,21 @@ php artisan serve
 - 18 Repository Implementations
 - 18 Service Classes
 - 26 Eloquent Models
-- 101+ API endpoints
+- 111+ API endpoints (includes 10 critical government compliance & risk management metrics)
 - Service-Repository-Interface pattern
 - RBAC implemented
 - Audit logging functional
-- Dashboard analytics
+- Dashboard analytics with government compliance metrics
 - Project approval workflow
 - Financial disbursement tracking
 - Notification system
 - Location hierarchy management
 - Project team assignment
 - Milestone tracking with completion rate
+- COA/DBM/NEDA compliance reporting
+- Proactive risk management dashboard
+- Beneficiary impact tracking
+- Early warning alert system
 
 **Status:** READY FOR DEPLOYMENT
 

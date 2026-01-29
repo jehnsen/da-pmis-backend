@@ -67,18 +67,41 @@ class ProjectApprovalService
             ];
         }
 
-        $level = $this->repository->getUserApprovalLevel($user);
-        $project = $this->repository->approve($project, $user, $level, $comments);
+        try {
+            $level = $this->repository->getUserApprovalLevel($user);
+            $project = $this->repository->approve($project, $user, $level, $comments);
 
-        $message = $project->isApproved()
-            ? 'Project has been fully approved'
-            : 'Project approved and moved to next approval level';
+            $message = $project->isApproved()
+                ? 'Project has been fully approved'
+                : 'Project approved and moved to next approval level';
 
-        return [
-            'success' => true,
-            'message' => $message,
-            'project' => $project,
-        ];
+            return [
+                'success' => true,
+                'message' => $message,
+                'project' => $project,
+            ];
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Handle unique constraint violation (duplicate approval)
+            if ($e->getCode() === '23000' || str_contains($e->getMessage(), 'unique_project_level_action')) {
+                return [
+                    'success' => false,
+                    'message' => 'This project has already been approved at this level. Another officer may have processed it simultaneously.',
+                    'code' => 409, // Conflict
+                ];
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            // Handle state validation errors from repository
+            if (str_contains($e->getMessage(), 'no longer pending') ||
+                str_contains($e->getMessage(), 'not pending at')) {
+                return [
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'code' => 409, // Conflict - state changed
+                ];
+            }
+            throw $e;
+        }
     }
 
     /**
@@ -108,14 +131,37 @@ class ProjectApprovalService
             ];
         }
 
-        $level = $this->repository->getUserApprovalLevel($user);
-        $project = $this->repository->reject($project, $user, $level, $comments, $reason);
+        try {
+            $level = $this->repository->getUserApprovalLevel($user);
+            $project = $this->repository->reject($project, $user, $level, $comments, $reason);
 
-        return [
-            'success' => true,
-            'message' => 'Project has been rejected',
-            'project' => $project,
-        ];
+            return [
+                'success' => true,
+                'message' => 'Project has been rejected',
+                'project' => $project,
+            ];
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Handle unique constraint violation (duplicate rejection)
+            if ($e->getCode() === '23000' || str_contains($e->getMessage(), 'unique_project_level_action')) {
+                return [
+                    'success' => false,
+                    'message' => 'This project has already been rejected at this level. Another officer may have processed it simultaneously.',
+                    'code' => 409,
+                ];
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            // Handle state validation errors from repository
+            if (str_contains($e->getMessage(), 'no longer pending') ||
+                str_contains($e->getMessage(), 'not pending at')) {
+                return [
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'code' => 409,
+                ];
+            }
+            throw $e;
+        }
     }
 
     /**
@@ -145,14 +191,37 @@ class ProjectApprovalService
             ];
         }
 
-        $level = $this->repository->getUserApprovalLevel($user);
-        $project = $this->repository->requestChanges($project, $user, $level, $comments);
+        try {
+            $level = $this->repository->getUserApprovalLevel($user);
+            $project = $this->repository->requestChanges($project, $user, $level, $comments);
 
-        return [
-            'success' => true,
-            'message' => 'Changes have been requested for this project',
-            'project' => $project,
-        ];
+            return [
+                'success' => true,
+                'message' => 'Changes have been requested for this project',
+                'project' => $project,
+            ];
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Handle unique constraint violation (duplicate change request)
+            if ($e->getCode() === '23000' || str_contains($e->getMessage(), 'unique_project_level_action')) {
+                return [
+                    'success' => false,
+                    'message' => 'Changes have already been requested for this project at this level. Another officer may have processed it simultaneously.',
+                    'code' => 409,
+                ];
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            // Handle state validation errors from repository
+            if (str_contains($e->getMessage(), 'no longer pending') ||
+                str_contains($e->getMessage(), 'not pending at')) {
+                return [
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'code' => 409,
+                ];
+            }
+            throw $e;
+        }
     }
 
     /**

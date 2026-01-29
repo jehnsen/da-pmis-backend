@@ -75,8 +75,7 @@ class ProjectController extends Controller
             'projectStatus',
             'teamMembers.user',
             'milestones',
-            'documents.creator',
-            'auditLogs.user'
+            'documents.creator'
         ]));
     }
 
@@ -95,5 +94,66 @@ class ProjectController extends Controller
     {
         abort_unless($this->service->delete($project), 404);
         return response()->json(['message' => 'Project deleted successfully']);
+    }
+
+    /**
+     * Get audit logs for a specific project
+     *
+     * GET /api/projects/{id}/audit-logs
+     */
+    public function auditLogs(Request $request, int $project): JsonResponse
+    {
+        $request->validate([
+            'per_page' => 'nullable|integer|min:1|max:100',
+            'action' => 'nullable|string',
+            'user_id' => 'nullable|integer|exists:users,id',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date|after_or_equal:date_from',
+        ]);
+
+        $proj = $this->service->getById($project);
+        abort_unless($proj, 404);
+
+        $perPage = (int) $request->query('per_page', 15);
+
+        $query = $proj->auditLogs()->with('user:id,username,full_name');
+
+        // Apply filters
+        if ($request->filled('action')) {
+            $query->where('action', 'like', '%' . $request->action . '%');
+        }
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $auditLogs = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $auditLogs->items(),
+            'meta' => [
+                'current_page' => $auditLogs->currentPage(),
+                'from' => $auditLogs->firstItem(),
+                'last_page' => $auditLogs->lastPage(),
+                'per_page' => $auditLogs->perPage(),
+                'to' => $auditLogs->lastItem(),
+                'total' => $auditLogs->total(),
+            ],
+            'links' => [
+                'first' => $auditLogs->url(1),
+                'last' => $auditLogs->url($auditLogs->lastPage()),
+                'prev' => $auditLogs->previousPageUrl(),
+                'next' => $auditLogs->nextPageUrl(),
+            ],
+        ]);
     }
 }

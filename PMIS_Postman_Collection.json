@@ -781,6 +781,47 @@
 						"description": "Get the approval history for a project"
 					},
 					"response": []
+				},
+				{
+					"name": "Get Project Audit Logs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/audit-logs?per_page=15&action=&user_id=&date_from=&date_to=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1", "audit-logs"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Items per page (1-100)"
+								},
+								{
+									"key": "action",
+									"value": "",
+									"description": "Filter by action type (e.g., created, updated, deleted)"
+								},
+								{
+									"key": "user_id",
+									"value": "",
+									"description": "Filter by user ID"
+								},
+								{
+									"key": "date_from",
+									"value": "",
+									"description": "Filter from date (YYYY-MM-DD)"
+								},
+								{
+									"key": "date_to",
+									"value": "",
+									"description": "Filter to date (YYYY-MM-DD)"
+								}
+							]
+						},
+						"description": "Get audit logs for a project with pagination and filtering options"
+					},
+					"response": []
 				}
 			]
 		},
@@ -981,6 +1022,111 @@
 							]
 						},
 						"description": "Get monthly spending breakdown for a project"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Project Files & Images",
+			"item": [
+				{
+					"name": "Get Project Images",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/images?per_page=15&image_type=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1", "images"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Items per page (1-100)"
+								},
+								{
+									"key": "image_type",
+									"value": "",
+									"description": "Filter by type: cover, progress, documentation, before, after, other"
+								}
+							]
+						},
+						"description": "Get all images for a project with pagination and filtering. Returns image URLs, metadata, and uploader details."
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Project Images",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "images[]",
+									"type": "file",
+									"src": [],
+									"description": "Image files (max 10 files, 5MB each, jpeg/jpg/png/gif/webp)"
+								},
+								{
+									"key": "captions[]",
+									"value": "Project site before construction",
+									"type": "text",
+									"description": "Caption for each image (optional)"
+								},
+								{
+									"key": "image_types[]",
+									"value": "before",
+									"type": "text",
+									"description": "Type for each image: cover, progress, documentation, before, after, other"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/images",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1", "images"]
+						},
+						"description": "Upload multiple images for a project (up to 10 at once). Supports JPEG, PNG, GIF, and WebP formats."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Image Details",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"caption\": \"Updated caption\",\n    \"image_type\": \"progress\",\n    \"display_order\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/images/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1", "images", "1"]
+						},
+						"description": "Update image metadata (caption, type, display order)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Project Image",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/images/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1", "images", "1"]
+						},
+						"description": "Delete a project image. This will also remove the file from storage."
 					},
 					"response": []
 				}

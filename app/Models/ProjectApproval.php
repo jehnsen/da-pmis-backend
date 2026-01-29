@@ -19,10 +19,16 @@ class ProjectApproval extends Model
         'from_status',
         'to_status',
         'action_taken_at',
+        'is_revoked',
+        'revoked_by',
+        'revoked_at',
+        'revocation_reason',
     ];
 
     protected $casts = [
         'action_taken_at' => 'datetime',
+        'revoked_at' => 'datetime',
+        'is_revoked' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -41,6 +47,30 @@ class ProjectApproval extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the user who revoked this approval
+     */
+    public function revoker(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'revoked_by');
+    }
+
+    /**
+     * Scope for active (non-revoked) approvals
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_revoked', false);
+    }
+
+    /**
+     * Scope for revoked approvals
+     */
+    public function scopeRevoked($query)
+    {
+        return $query->where('is_revoked', true);
     }
 
     /**
