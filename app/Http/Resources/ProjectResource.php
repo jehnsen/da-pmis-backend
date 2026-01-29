@@ -31,10 +31,10 @@ class ProjectResource extends JsonResource
         // Include sensitive data only for internal view
         if ($this->shouldShowInternal()) {
             $data['budget'] = $this->budget;
-            $data['team_members'] = ProjectTeamMemberResource::collection($this->whenLoaded('teamMembers'));
-            $data['milestones'] = ProjectMilestoneResource::collection($this->whenLoaded('milestones'));
-            $data['documents'] = DocumentResource::collection($this->whenLoaded('documents'));
-            $data['audit_logs'] = AuditLogResource::collection($this->whenLoaded('auditLogs'));
+            // $data['team_members'] = ProjectTeamMemberResource::collection($this->whenLoaded('teamMembers'));
+            // $data['milestones'] = ProjectMilestoneResource::collection($this->whenLoaded('milestones'));
+            // $data['documents'] = DocumentResource::collection($this->whenLoaded('documents'));
+            // $data['audit_logs'] = AuditLogResource::collection($this->whenLoaded('auditLogs'));
 
             // Approval workflow data
             $data['approval_status'] = $this->approval_status;
