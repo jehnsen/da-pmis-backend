@@ -151,11 +151,21 @@ POST /api/contact-inquiries
 POST /api/newsletter-subscriptions
 
 
-select * from projects;
-select * from project_types;
-select * from project_milestones;
-select * from project_statuses;
-select * from programs;
-select * from inventories;
-select * from 
-select * from users;
+### Saved Queries
+-- show tables;
+SELECT * FROM role_permission;
+SELECT * FROM permissions;
+SELECT * FROM users;
+
+SELECT * FROM project_approvals;
+SELECT * FROM regions;
+
+SELECT * FROM project_types;
+SELECT * FROM projects WHERE id = 1;
+SELECT * FROM project_milestones WHERE project_id = 1;
+SELECT * FROM project_disbursements WHERE project_id = 1;
+SELECT * FROM project_approvals WHERE project_id = 1;
+SELECT * FROM project_images;
+SELECT * FROM progress_reports;
+SELECT * FROM progress_report_images; 
+SELECT * FROM roles;
