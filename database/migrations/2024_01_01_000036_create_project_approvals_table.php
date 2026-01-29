@@ -15,7 +15,7 @@ return new class extends Migration
             $table->enum('action', ['submitted', 'approved', 'rejected', 'requested_changes']);
             $table->text('comments')->nullable();
             $table->string('reason')->nullable(); // rejection reason
-            $table->enum('level', ['field', 'municipal', 'provincial', 'regional']);
+            $table->enum('level', ['barangay', 'municipal', 'provincial', 'governor']);
             $table->string('from_status')->nullable(); // previous approval status
             $table->string('to_status')->nullable(); // new approval status
             $table->timestamp('action_taken_at');
