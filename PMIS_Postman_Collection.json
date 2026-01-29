@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "da-caraga-pmis-2025",
 		"name": "DA-CARAGA PMIS API",
-		"description": "Complete API collection for Department of Agriculture - CARAGA Region Performance Management Information System (PMIS)\n\n**Authentication:** Laravel Sanctum (Token-based)\n**Updated:** 2026-01-28 (Migrated from Passport to Sanctum)\n\n**Default Login:**\n- Username: admin\n- Password: Password123!\n\n**Base URL:** http://localhost:8000/api\n\n**How to Use:**\n1. Send a POST request to `/api/login` with your credentials\n2. The token will be automatically saved to `{{access_token}}` variable\n3. All authenticated requests will use this token automatically via Bearer authentication\n4. Use `/api/logout` to invalidate your current token\n\n**Note:** All authenticated endpoints require a valid Bearer token in the Authorization header.",
+		"description": "Complete API collection for Department of Agriculture - CARAGA Region Performance Management Information System (PMIS)\n\n**Total Endpoints:** 140+\n**Authentication:** Laravel Sanctum (Token-based)\n**Updated:** 2026-01-29\n\n**Default Login:**\n- Username: admin\n- Password: Password123!\n\n**Base URL:** http://localhost:8000/api\n\n**How to Use:**\n1. Send a POST request to `/api/login` with your credentials\n2. The token will be automatically saved to `{{access_token}}` variable\n3. All authenticated requests will use this token automatically via Bearer authentication\n4. Use `/api/logout` to invalidate your current token\n\n**New Features:**\n- Password reset and change endpoints\n- 10 Critical Government Compliance Metrics (COA/DBM/NEDA)\n- Project Team Member Management\n- Project Milestone Tracking\n- Progress Report Image Management\n- Storage Statistics\n\n**Note:** All authenticated endpoints require a valid Bearer token in the Authorization header.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "12345678"
 	},
@@ -143,6 +143,81 @@
 							"path": ["api", "logout"]
 						},
 						"description": "Logout and delete current access token (Sanctum)"
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/password/forgot",
+							"host": ["{{base_url}}"],
+							"path": ["api", "password", "forgot"]
+						},
+						"description": "Request password reset link via email"
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"NewPassword123!\",\n    \"password_confirmation\": \"NewPassword123!\",\n    \"token\": \"reset_token_here\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/password/reset",
+							"host": ["{{base_url}}"],
+							"path": ["api", "password", "reset"]
+						},
+						"description": "Reset password using token from email"
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"current_password\": \"Password123!\",\n    \"password\": \"NewPassword123!\",\n    \"password_confirmation\": \"NewPassword123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/password/change",
+							"host": ["{{base_url}}"],
+							"path": ["api", "password", "change"]
+						},
+						"description": "Change password for authenticated user"
 					},
 					"response": []
 				}
@@ -307,6 +382,296 @@
 							]
 						},
 						"description": "Get monthly progress data by department"
+					},
+					"response": []
+				},
+				{
+					"name": "Physical vs Financial Variance (COA)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/dashboard/physical-financial-variance?fiscal_year=&department_id=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "dashboard", "physical-financial-variance"],
+							"query": [
+								{
+									"key": "fiscal_year",
+									"value": "",
+									"description": "Filter by fiscal year"
+								},
+								{
+									"key": "department_id",
+									"value": "",
+									"description": "Filter by department"
+								}
+							]
+						},
+						"description": "COA Compliance: Physical progress vs financial utilization variance analysis"
+					},
+					"response": []
+				},
+				{
+					"name": "Budget Variance Heatmap (DBM)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/dashboard/budget-variance-heatmap?fiscal_year=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "dashboard", "budget-variance-heatmap"],
+							"query": [
+								{
+									"key": "fiscal_year",
+									"value": "",
+									"description": "Filter by fiscal year"
+								}
+							]
+						},
+						"description": "DBM Compliance: Budget utilization variance by department (under/over spending analysis)"
+					},
+					"response": []
+				},
+				{
+					"name": "Milestone Completion Tracker (NEDA)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/dashboard/milestone-completion-tracker?fiscal_year=&department_id=&status=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "dashboard", "milestone-completion-tracker"],
+							"query": [
+								{
+									"key": "fiscal_year",
+									"value": "",
+									"description": "Filter by fiscal year"
+								},
+								{
+									"key": "department_id",
+									"value": "",
+									"description": "Filter by department"
+								},
+								{
+									"key": "status",
+									"value": "",
+									"description": "Filter by status (on_track, delayed, critical)"
+								}
+							]
+						},
+						"description": "NEDA Compliance: Project milestone completion rates and timeline compliance tracking"
+					},
+					"response": []
+				},
+				{
+					"name": "Target vs Achievement KPI",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/dashboard/target-achievement-kpi?fiscal_year=&department_id=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "dashboard", "target-achievement-kpi"],
+							"query": [
+								{
+									"key": "fiscal_year",
+									"value": "",
+									"description": "Filter by fiscal year"
+								},
+								{
+									"key": "department_id",
+									"value": "",
+									"description": "Filter by department"
+								}
+							]
+						},
+						"description": "Performance Management: Target vs actual achievement KPIs for all projects"
+					},
+					"response": []
+				},
+				{
+					"name": "Cost Efficiency Metrics (DBM)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/dashboard/cost-efficiency-metrics?fiscal_year=&department_id=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "dashboard", "cost-efficiency-metrics"],
+							"query": [
+								{
+									"key": "fiscal_year",
+									"value": "",
+									"description": "Filter by fiscal year"
+								},
+								{
+									"key": "department_id",
+									"value": "",
+									"description": "Filter by department"
+								}
+							]
+						},
+						"description": "DBM Compliance: Cost efficiency analysis (cost per beneficiary, hectare, MT output)"
+					},
+					"response": []
+				},
+				{
+					"name": "Risk Dashboard",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/dashboard/risk-dashboard?fiscal_year=&risk_level=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "dashboard", "risk-dashboard"],
+							"query": [
+								{
+									"key": "fiscal_year",
+									"value": "",
+									"description": "Filter by fiscal year"
+								},
+								{
+									"key": "risk_level",
+									"value": "",
+									"description": "Filter by risk level (low, medium, high, critical)"
+								}
+							]
+						},
+						"description": "Proactive Risk Management: Identify projects with budget overruns, delays, or low completion rates"
+					},
+					"response": []
+				},
+				{
+					"name": "Beneficiary Impact Metrics",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/dashboard/beneficiary-impact-metrics?fiscal_year=&department_id=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "dashboard", "beneficiary-impact-metrics"],
+							"query": [
+								{
+									"key": "fiscal_year",
+									"value": "",
+									"description": "Filter by fiscal year"
+								},
+								{
+									"key": "department_id",
+									"value": "",
+									"description": "Filter by department"
+								}
+							]
+						},
+						"description": "Impact Assessment: Actual vs target beneficiaries, outcome-based metrics for funding justification"
+					},
+					"response": []
+				},
+				{
+					"name": "Compliance Scorecard (COA Audit)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/dashboard/compliance-scorecard?fiscal_year=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "dashboard", "compliance-scorecard"],
+							"query": [
+								{
+									"key": "fiscal_year",
+									"value": "",
+									"description": "Filter by fiscal year"
+								}
+							]
+						},
+						"description": "COA Audit Readiness: Overall compliance score across all critical metrics"
+					},
+					"response": []
+				},
+				{
+					"name": "Year-over-Year Trends",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/dashboard/year-over-year-trends?start_year=&end_year=&department_id=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "dashboard", "year-over-year-trends"],
+							"query": [
+								{
+									"key": "start_year",
+									"value": "",
+									"description": "Starting year for comparison"
+								},
+								{
+									"key": "end_year",
+									"value": "",
+									"description": "Ending year for comparison"
+								},
+								{
+									"key": "department_id",
+									"value": "",
+									"description": "Filter by department"
+								}
+							]
+						},
+						"description": "Historical Trends: 3-year performance comparison for budget, completion rates, and beneficiaries"
+					},
+					"response": []
+				},
+				{
+					"name": "Early Warning Alerts",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/dashboard/early-warning-alerts?severity=&department_id=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "dashboard", "early-warning-alerts"],
+							"query": [
+								{
+									"key": "severity",
+									"value": "",
+									"description": "Filter by severity (warning, critical)"
+								},
+								{
+									"key": "department_id",
+									"value": "",
+									"description": "Filter by department"
+								}
+							]
+						},
+						"description": "Proactive Monitoring: Early detection of projects at risk 2-3 months before deadline"
 					},
 					"response": []
 				}
@@ -1133,6 +1498,215 @@
 			]
 		},
 		{
+			"name": "Project Team Members",
+			"item": [
+				{
+					"name": "Get Team Members",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/team-members",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1", "team-members"]
+						},
+						"description": "Get all team members assigned to a project with completion rate statistics"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Team Member",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": 2,\n    \"role\": \"Project Manager\",\n    \"assigned_date\": \"2025-01-15\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/team-members",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1", "team-members"]
+						},
+						"description": "Assign a team member to a project with a specific role"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Team Member Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/team-members/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1", "team-members", "1"]
+						},
+						"description": "Get details of a specific team member assignment"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Team Member Role",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"role\": \"Senior Project Manager\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/team-members/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1", "team-members", "1"]
+						},
+						"description": "Update the role of a team member"
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Team Member",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/team-members/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1", "team-members", "1"]
+						},
+						"description": "Remove a team member from a project"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Project Milestones",
+			"item": [
+				{
+					"name": "Get Project Milestones",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/milestones",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1", "milestones"]
+						},
+						"description": "Get all milestones for a project with completion rate statistics"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Milestone",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Project Kickoff Meeting\",\n    \"description\": \"Initial meeting with all stakeholders\",\n    \"target_date\": \"2025-02-01\",\n    \"status\": \"pending\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/milestones",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1", "milestones"]
+						},
+						"description": "Create a new milestone for a project"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Milestone Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/milestones/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1", "milestones", "1"]
+						},
+						"description": "Get details of a specific milestone"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Milestone",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated Milestone Title\",\n    \"target_date\": \"2025-02-15\",\n    \"status\": \"in_progress\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/milestones/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1", "milestones", "1"]
+						},
+						"description": "Update milestone details"
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Milestone as Completed",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"completed_date\": \"2025-02-01\",\n    \"notes\": \"Milestone completed successfully\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/milestones/1/complete",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1", "milestones", "1", "complete"]
+						},
+						"description": "Mark a milestone as completed with completion date and notes"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Milestone",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/milestones/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "projects", "1", "milestones", "1"]
+						},
+						"description": "Delete a milestone from a project"
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Progress Reports",
 			"item": [
 				{
@@ -1269,6 +1843,130 @@
 							"path": ["api", "projects", "1", "progress-timeline"]
 						},
 						"description": "Get progress timeline for a specific project"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Progress Report Images",
+			"item": [
+				{
+					"name": "Get Progress Report Images",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/progress-reports/1/images?per_page=15&image_type=",
+							"host": ["{{base_url}}"],
+							"path": ["api", "progress-reports", "1", "images"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Items per page (1-100)"
+								},
+								{
+									"key": "image_type",
+									"value": "",
+									"description": "Filter by type: progress, documentation, before, after, other"
+								}
+							]
+						},
+						"description": "Get all images for a progress report with pagination and filtering"
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Progress Report Images",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "images[]",
+									"type": "file",
+									"src": [],
+									"description": "Image files (max 10 files, 5MB each, jpeg/jpg/png/gif/webp)"
+								},
+								{
+									"key": "captions[]",
+									"value": "Progress photo from field visit",
+									"type": "text",
+									"description": "Caption for each image (optional)"
+								},
+								{
+									"key": "image_types[]",
+									"value": "progress",
+									"type": "text",
+									"description": "Type for each image: progress, documentation, before, after, other"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/progress-reports/1/images",
+							"host": ["{{base_url}}"],
+							"path": ["api", "progress-reports", "1", "images"]
+						},
+						"description": "Upload multiple images for a progress report (up to 10 at once)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Progress Report Image",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"caption\": \"Updated caption\",\n    \"image_type\": \"documentation\",\n    \"display_order\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/progress-reports/1/images/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "progress-reports", "1", "images", "1"]
+						},
+						"description": "Update progress report image metadata (caption, type, display order)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Progress Report Image",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/progress-reports/1/images/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "progress-reports", "1", "images", "1"]
+						},
+						"description": "Delete a progress report image and remove file from storage"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Storage Management",
+			"item": [
+				{
+					"name": "Get Storage Statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/storage/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "storage", "stats"]
+						},
+						"description": "Get storage usage statistics including total size, file counts, and breakdown by type"
 					},
 					"response": []
 				}
