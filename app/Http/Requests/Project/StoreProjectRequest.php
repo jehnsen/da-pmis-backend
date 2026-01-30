@@ -17,6 +17,10 @@ class StoreProjectRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'department_id' => ['required', 'exists:departments,id'],
+            'sector_id' => ['nullable', 'exists:lgu_sectors,id'], // RA 7160 sector
+            'municipality_id' => ['required', 'exists:municipalities,id'], // RA 7160 territorial jurisdiction
+            'province_id' => ['nullable', 'exists:provinces,id'],
+            'barangay' => ['nullable', 'string', 'max:100'],
             'project_type_id' => ['required', 'exists:project_types,id'],
             'project_status_id' => ['required', 'exists:project_statuses,id'],
             'budget' => ['required', 'numeric', 'min:0'],

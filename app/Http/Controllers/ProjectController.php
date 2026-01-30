@@ -23,6 +23,7 @@ class ProjectController extends Controller
         $filterKeys = [
             'search',
             'department_id',
+            'sector_id',
             'project_type_id',
             'project_status_id',
             'category_id',

@@ -19,4 +19,5 @@ return [
     App\Providers\DepartmentReportServiceProvider::class,
     App\Providers\ProjectApprovalServiceProvider::class,
     App\Providers\ProjectDisbursementServiceProvider::class,
+    App\Providers\LguSectorServiceProvider::class,
 ];

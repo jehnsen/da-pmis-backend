@@ -23,6 +23,7 @@ class User extends Authenticatable
         'address',
         'role_id',
         'department_id',
+        'municipality_id',
         'is_active',
         'last_login_at',
     ];
@@ -58,6 +59,14 @@ class User extends Authenticatable
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
+    }
+
+    /**
+     * Get the municipality that this user belongs to (RA 7160 territorial jurisdiction)
+     */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 
     /**

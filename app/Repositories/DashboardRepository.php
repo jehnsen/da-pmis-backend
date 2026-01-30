@@ -39,6 +39,10 @@ class DashboardRepository implements DashboardRepositoryInterface
             $query->where('department_id', $filters['department_id']);
         }
 
+        if (isset($filters['sector_id'])) {
+            $query->where('sector_id', $filters['sector_id']);
+        }
+
         $totalProjects = $query->count();
         $totalInvestment = $query->sum('budget');
 
@@ -120,6 +124,10 @@ class DashboardRepository implements DashboardRepositoryInterface
             $projectBudgets->whereYear('projects.start_date', $filters['fiscal_year']);
         }
 
+        if (isset($filters['sector_id'])) {
+            $projectBudgets->where('projects.sector_id', $filters['sector_id']);
+        }
+
         // Get regions with their budget data
         $regions = $this->region->all();
         $result = [];
@@ -159,6 +167,10 @@ class DashboardRepository implements DashboardRepositoryInterface
 
         if (isset($filters['department_id'])) {
             $query->where('projects.department_id', $filters['department_id']);
+        }
+
+        if (isset($filters['sector_id'])) {
+            $query->where('projects.sector_id', $filters['sector_id']);
         }
 
         $distribution = $query->get();
@@ -260,6 +272,10 @@ class DashboardRepository implements DashboardRepositoryInterface
 
         if (isset($filters['department_id'])) {
             $query->where('projects.department_id', $filters['department_id']);
+        }
+
+        if (isset($filters['sector_id'])) {
+            $query->where('projects.sector_id', $filters['sector_id']);
         }
 
         $rawData = $query->get();
@@ -397,6 +413,10 @@ class DashboardRepository implements DashboardRepositoryInterface
             $query->where('projects.department_id', $filters['department_id']);
         }
 
+        if (isset($filters['sector_id'])) {
+            $query->where('projects.sector_id', $filters['sector_id']);
+        }
+
         if (isset($filters['report_period'])) {
             $query->where('progress_reports.report_period', $filters['report_period']);
         }
@@ -483,6 +503,9 @@ class DashboardRepository implements DashboardRepositoryInterface
                 if (isset($filters['fiscal_year'])) {
                     $q->whereYear('start_date', $filters['fiscal_year']);
                 }
+                if (isset($filters['sector_id'])) {
+                    $q->where('sector_id', $filters['sector_id']);
+                }
             }]);
 
         $departments = $query->get();
@@ -566,6 +589,10 @@ class DashboardRepository implements DashboardRepositoryInterface
 
         if (isset($filters['department_id'])) {
             $query->where('projects.department_id', $filters['department_id']);
+        }
+
+        if (isset($filters['sector_id'])) {
+            $query->where('projects.sector_id', $filters['sector_id']);
         }
 
         if (isset($filters['quarter'])) {
@@ -722,8 +749,13 @@ class DashboardRepository implements DashboardRepositoryInterface
 
         // Get projects for the fiscal year
         $projects = Project::query()
-            ->whereYear('start_date', $fiscalYear)
-            ->with(['disbursements' => function ($q) {
+            ->whereYear('start_date', $fiscalYear);
+
+        if (isset($filters['sector_id'])) {
+            $projects = $projects->where('sector_id', $filters['sector_id']);
+        }
+
+        $projects = $projects->with(['disbursements' => function ($q) {
                 $q->where('status', 'completed');
             }])
             ->get();
@@ -821,6 +853,10 @@ class DashboardRepository implements DashboardRepositoryInterface
 
         if (isset($filters['department_id'])) {
             $query->where('department_id', $filters['department_id']);
+        }
+
+        if (isset($filters['sector_id'])) {
+            $query->where('sector_id', $filters['sector_id']);
         }
 
         $projects = $query->get();
@@ -932,8 +968,13 @@ class DashboardRepository implements DashboardRepositoryInterface
 
         // Get projects for the fiscal year
         $projects = Project::query()
-            ->whereYear('start_date', $fiscalYear)
-            ->with(['disbursements' => function ($q) {
+            ->whereYear('start_date', $fiscalYear);
+
+        if (isset($filters['sector_id'])) {
+            $projects = $projects->where('sector_id', $filters['sector_id']);
+        }
+
+        $projects = $projects->with(['disbursements' => function ($q) {
                 $q->where('status', 'completed');
             }])
             ->get();
@@ -1030,6 +1071,10 @@ class DashboardRepository implements DashboardRepositoryInterface
 
         if (isset($filters['department_id'])) {
             $query->where('department_id', $filters['department_id']);
+        }
+
+        if (isset($filters['sector_id'])) {
+            $query->where('sector_id', $filters['sector_id']);
         }
 
         $projects = $query->get();
@@ -1244,6 +1289,10 @@ class DashboardRepository implements DashboardRepositoryInterface
 
         if (isset($filters['fiscal_year'])) {
             $query->whereYear('start_date', $filters['fiscal_year']);
+        }
+
+        if (isset($filters['sector_id'])) {
+            $query->where('sector_id', $filters['sector_id']);
         }
 
         $projects = $query->get();

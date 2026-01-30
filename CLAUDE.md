@@ -1,6 +1,6 @@
 ## Project Overview
 
-**DA-PMIS** (Department of Agriculture - Performance Management Information System) is a Laravel 11 backend API that has evolved into a **Provincial LGU Governance Intelligence Platform** for the CARAGA Region (Region XIII), Philippines. Originally focused on agricultural projects, the system now implements **RA 7160 (Local Government Code of 1991)** compliance with multi-sector provincial governance covering Social Services, Economic Services, Infrastructure & Environmental Management, and General Public Services. It manages projects, crop/livestock statistics, progress reports, dashboard analytics, project approvals, financial disbursements, and public engagement.
+**PLGU-GIP** - The Provincial LGU Governance Intelligence Platform for the CARAGA Region (Region XIII), Philippines focused on infrastructure, health and agricultural projects, the system now implements **RA 7160 (Local Government Code of 1991)** compliance with multi-sector provincial governance covering Social Services, Economic Services, Infrastructure & Environmental Management, and General Public Services. It manages projects, crop/livestock statistics, progress reports, dashboard analytics, project approvals, financial disbursements, and public engagement.
 
 ## Tech Stack
 

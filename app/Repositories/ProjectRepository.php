@@ -16,7 +16,7 @@ class ProjectRepository implements ProjectRepositoryInterface
 
     public function all(array $filters = [])
     {
-        $query = $this->model->query()->with(['department', 'projectType', 'projectStatus']);
+        $query = $this->model->query()->with(['department', 'sector', 'projectType', 'projectStatus']);
 
         if (isset($filters['department_id'])) {
             $query->where('department_id', $filters['department_id']);
@@ -39,7 +39,7 @@ class ProjectRepository implements ProjectRepositoryInterface
 
     public function paginate(int $perPage = 15, array $filters = [])
     {
-        $query = $this->model->query()->with(['department', 'projectType', 'projectStatus']);
+        $query = $this->model->query()->with(['department', 'sector', 'projectType', 'projectStatus']);
 
         // Search across multiple fields
         if (! empty($filters['search'])) {
@@ -56,6 +56,11 @@ class ProjectRepository implements ProjectRepositoryInterface
         // Department filter
         if (isset($filters['department_id'])) {
             $query->where('department_id', $filters['department_id']);
+        }
+
+        // Sector filter
+        if (isset($filters['sector_id'])) {
+            $query->where('sector_id', $filters['sector_id']);
         }
 
         // Project type filter (also accept category_id)
@@ -121,7 +126,7 @@ class ProjectRepository implements ProjectRepositoryInterface
 
     public function find($id)
     {
-        return $this->model->with(['department', 'projectType', 'projectStatus', 'teamMembers', 'milestones'])->find($id);
+        return $this->model->with(['department', 'sector', 'projectType', 'projectStatus', 'teamMembers', 'milestones'])->find($id);
     }
 
     public function create(array $data)

@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Department;
+use App\Models\Municipality;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 
@@ -14,7 +15,14 @@ class UserSeeder extends Seeder
     /**
      * Run the database seeds.
      *
-     * Creates sample users for DA-CARAGA PMIS with hashed passwords
+     * Creates sample users for Provincial LGU Governance Platform (RA 7160 compliant)
+     *
+     * RA 7160 Approval Workflow:
+     * - Level 0: Barangay Development Council (BDC) - Project drafting/proposal entry point
+     * - Level 1: Municipal Planning & Development Office (MPDO) - Municipal validation
+     * - Level 2: Provincial Planning & Development Office (PPDO) - Provincial technical review
+     * - Level 3: Provincial Governor - Final approval authority
+     *
      * Default password for all users: Password123!
      */
     public function run(): void
@@ -23,6 +31,9 @@ class UserSeeder extends Seeder
             // Get roles and departments
             $roles = Role::all()->keyBy('name');
             $departments = Department::all()->keyBy('name');
+
+            // Get municipalities for RA 7160 territorial jurisdiction assignment
+            $municipalities = Municipality::all()->keyBy('name');
 
             $users = [
                 // System Administrator
@@ -37,111 +48,140 @@ class UserSeeder extends Seeder
                     'updated_at' => now(),
                 ],
 
-                // Regional Director
+                // Provincial Governor (RA 7160 Approval Level 3 - Final Authority)
                 [
                     'full_name' => 'Maria Santos-Rodriguez',
-                    'username' => 'mrodriguez',
-                    'email' => 'director@da-caraga.gov.ph',
+                    'username' => 'governor_caraga',
+                    'email' => 'governor@caraga.gov.ph',
                     'password' => Hash::make('Password123!'),
-                    'role_id' => $roles['Regional Director']->id ?? null,
+                    'role_id' => $roles['Provincial Governor']->id ?? null,
                     'department_id' => $departments['Office of the Regional Executive Director']->id ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
 
-                // Provincial Officers (Approval Workflow Level 2)
+                // Provincial Planning & Development Officers (RA 7160 Approval Level 2 - PPDO)
                 [
                     'full_name' => 'Carlos Mendez-Silva',
-                    'username' => 'provincial_agusannorte',
-                    'email' => 'provincial.agusannorte@da-caraga.gov.ph',
+                    'username' => 'ppdo_agusannorte',
+                    'email' => 'ppdo.agusannorte@caraga.gov.ph',
                     'password' => Hash::make('Password123!'),
-                    'role_id' => $roles['Provincial Officer']->id ?? null,
-                    'department_id' => $departments['Office of the Regional Executive Director']->id ?? null,
+                    'role_id' => $roles['Provincial Planning Officer (PPDO)']->id ?? null,
+                    'department_id' => $departments['Planning, Monitoring and Evaluation Division']->id ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
                 [
                     'full_name' => 'Sofia Ramirez-Torres',
-                    'username' => 'provincial_agusansur',
-                    'email' => 'provincial.agusansur@da-caraga.gov.ph',
+                    'username' => 'ppdo_agusansur',
+                    'email' => 'ppdo.agusansur@caraga.gov.ph',
                     'password' => Hash::make('Password123!'),
-                    'role_id' => $roles['Provincial Officer']->id ?? null,
-                    'department_id' => $departments['Office of the Regional Executive Director']->id ?? null,
+                    'role_id' => $roles['Provincial Planning Officer (PPDO)']->id ?? null,
+                    'department_id' => $departments['Planning, Monitoring and Evaluation Division']->id ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
                 [
                     'full_name' => 'Benjamin Cruz-Flores',
-                    'username' => 'provincial_surigaonorte',
-                    'email' => 'provincial.surigaonorte@da-caraga.gov.ph',
+                    'username' => 'ppdo_surigaonorte',
+                    'email' => 'ppdo.surigaonorte@caraga.gov.ph',
                     'password' => Hash::make('Password123!'),
-                    'role_id' => $roles['Provincial Officer']->id ?? null,
-                    'department_id' => $departments['Office of the Regional Executive Director']->id ?? null,
+                    'role_id' => $roles['Provincial Planning Officer (PPDO)']->id ?? null,
+                    'department_id' => $departments['Planning, Monitoring and Evaluation Division']->id ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
 
-                // Municipal Officers (Approval Workflow Level 1)
+                // Municipal Planning & Development Officers (RA 7160 Approval Level 1 - MPDO)
+                // RA 7160 Territorial Jurisdiction: MPDOs can only approve projects from their municipality
                 [
                     'full_name' => 'Rafael Santos-Aquino',
-                    'username' => 'municipal_butuan',
-                    'email' => 'municipal.butuan@da-caraga.gov.ph',
+                    'username' => 'mpdo_butuan',
+                    'email' => 'mpdo.butuan@caraga.gov.ph',
                     'password' => Hash::make('Password123!'),
-                    'role_id' => $roles['Municipal Officer']->id ?? null,
-                    'department_id' => $departments['Field Operations Division']->id ?? null,
+                    'role_id' => $roles['Municipal Planning Officer (MPDO)']->id ?? null,
+                    'department_id' => $departments['Planning, Monitoring and Evaluation Division']->id ?? null,
+                    'municipality_id' => $municipalities['Butuan City']->id ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
                 [
                     'full_name' => 'Isabella Garcia-Reyes',
-                    'username' => 'municipal_cabadbaran',
-                    'email' => 'municipal.cabadbaran@da-caraga.gov.ph',
+                    'username' => 'mpdo_cabadbaran',
+                    'email' => 'mpdo.cabadbaran@caraga.gov.ph',
                     'password' => Hash::make('Password123!'),
-                    'role_id' => $roles['Municipal Officer']->id ?? null,
-                    'department_id' => $departments['Field Operations Division']->id ?? null,
+                    'role_id' => $roles['Municipal Planning Officer (MPDO)']->id ?? null,
+                    'department_id' => $departments['Planning, Monitoring and Evaluation Division']->id ?? null,
+                    'municipality_id' => $municipalities['Cabadbaran City']->id ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
                 [
                     'full_name' => 'Gabriel Fernandez-Lopez',
-                    'username' => 'municipal_surigao',
-                    'email' => 'municipal.surigao@da-caraga.gov.ph',
+                    'username' => 'mpdo_surigao',
+                    'email' => 'mpdo.surigao@caraga.gov.ph',
                     'password' => Hash::make('Password123!'),
-                    'role_id' => $roles['Municipal Officer']->id ?? null,
-                    'department_id' => $departments['Field Operations Division']->id ?? null,
+                    'role_id' => $roles['Municipal Planning Officer (MPDO)']->id ?? null,
+                    'department_id' => $departments['Planning, Monitoring and Evaluation Division']->id ?? null,
+                    'municipality_id' => $municipalities['Surigao City']->id ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
 
-                // Field Officers (Project Submission & Field Operations)
+                // Barangay Development Council Officers (RA 7160 Level 0 - Project Drafting/Proposal Entry Point)
+                // RA 7160 Territorial Jurisdiction: BDC officers can only approve projects from their municipality
                 [
                     'full_name' => 'Diana Rodriguez-Castro',
-                    'username' => 'field_bunawan',
-                    'email' => 'field.bunawan@da-caraga.gov.ph',
+                    'username' => 'bdc_bunawan',
+                    'email' => 'bdc.bunawan@caraga.gov.ph',
                     'password' => Hash::make('Password123!'),
-                    'role_id' => $roles['Field Officer']->id ?? null,
+                    'role_id' => $roles['Barangay Development Council Officer']->id ?? null,
                     'department_id' => $departments['Field Operations Division']->id ?? null,
+                    'municipality_id' => $municipalities['Bunawan']->id ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
                 [
                     'full_name' => 'Marco Villa-Santos',
-                    'username' => 'field_bayugan',
-                    'email' => 'field.bayugan@da-caraga.gov.ph',
+                    'username' => 'bdc_bayugan',
+                    'email' => 'bdc.bayugan@caraga.gov.ph',
                     'password' => Hash::make('Password123!'),
-                    'role_id' => $roles['Field Officer']->id ?? null,
+                    'role_id' => $roles['Barangay Development Council Officer']->id ?? null,
                     'department_id' => $departments['Field Operations Division']->id ?? null,
+                    'municipality_id' => $municipalities['Bayugan']->id ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'full_name' => 'Anna Marie Gonzales',
+                    'username' => 'bdc_prosperidad',
+                    'email' => 'bdc.prosperidad@caraga.gov.ph',
+                    'password' => Hash::make('Password123!'),
+                    'role_id' => $roles['Barangay Development Council Officer']->id ?? null,
+                    'department_id' => $departments['Field Operations Division']->id ?? null,
+                    'municipality_id' => $municipalities['Prosperidad']->id ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'full_name' => 'Ricardo Magpantay',
+                    'username' => 'bdc_sanfrancisco',
+                    'email' => 'bdc.sanfrancisco@caraga.gov.ph',
+                    'password' => Hash::make('Password123!'),
+                    'role_id' => $roles['Barangay Development Council Officer']->id ?? null,
+                    'department_id' => $departments['Field Operations Division']->id ?? null,
+                    'municipality_id' => $municipalities['San Francisco']->id ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
 
-                // Department Heads
+                // LGU Sector Heads (Managing SS/ES/IEM/GPS sectors)
                 [
                     'full_name' => 'Roberto Villanueva',
                     'username' => 'rvillanueva',
                     'email' => 'rvillanueva@da-caraga.gov.ph',
                     'password' => Hash::make('Password123!'),
-                    'role_id' => $roles['Department Head']->id ?? null,
+                    'role_id' => $roles['Sector Head']->id ?? null,
                     'department_id' => $departments['Rice Program']->id ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -151,7 +191,7 @@ class UserSeeder extends Seeder
                     'username' => 'clopez',
                     'email' => 'clopez@da-caraga.gov.ph',
                     'password' => Hash::make('Password123!'),
-                    'role_id' => $roles['Department Head']->id ?? null,
+                    'role_id' => $roles['Sector Head']->id ?? null,
                     'department_id' => $departments['High-Value Crops Development Program']->id ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -161,7 +201,7 @@ class UserSeeder extends Seeder
                     'username' => 'amendoza',
                     'email' => 'amendoza@da-caraga.gov.ph',
                     'password' => Hash::make('Password123!'),
-                    'role_id' => $roles['Department Head']->id ?? null,
+                    'role_id' => $roles['Sector Head']->id ?? null,
                     'department_id' => $departments['Livestock Development Division']->id ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -199,13 +239,13 @@ class UserSeeder extends Seeder
                     'updated_at' => now(),
                 ],
 
-                // Agricultural Technicians
+                // Technical Officers (Field implementation & data collection)
                 [
                     'full_name' => 'Jose Ramos',
                     'username' => 'jramos',
                     'email' => 'jramos@da-caraga.gov.ph',
                     'password' => Hash::make('Password123!'),
-                    'role_id' => $roles['Agricultural Technician']->id ?? null,
+                    'role_id' => $roles['Technical Officer']->id ?? null,
                     'department_id' => $departments['Agricultural Extension Services']->id ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -215,7 +255,7 @@ class UserSeeder extends Seeder
                     'username' => 'lbautista',
                     'email' => 'lbautista@da-caraga.gov.ph',
                     'password' => Hash::make('Password123!'),
-                    'role_id' => $roles['Agricultural Technician']->id ?? null,
+                    'role_id' => $roles['Technical Officer']->id ?? null,
                     'department_id' => $departments['Field Operations Division']->id ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -225,7 +265,7 @@ class UserSeeder extends Seeder
                     'username' => 'mtorres',
                     'email' => 'mtorres@da-caraga.gov.ph',
                     'password' => Hash::make('Password123!'),
-                    'role_id' => $roles['Agricultural Technician']->id ?? null,
+                    'role_id' => $roles['Technical Officer']->id ?? null,
                     'department_id' => $departments['Organic Agriculture Program']->id ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),

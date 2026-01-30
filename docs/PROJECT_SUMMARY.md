@@ -684,3 +684,21 @@ Key Features
 | **ES** | Economic Services | Agriculture, Tourism, Trade | Farm-to-market roads, agri-tech, tourism |
 | **IEM** | Infrastructure & Environmental Management | Public Works, Utilities, DRRM | Road construction, water systems |
 | **GPS** | General Public Services | Planning, Legal, Budget | PPDO initiatives, governance reforms |
+
+
+
+### Dashboard Analytics (13 endpoints):
+<!-- 
+GET /api/dashboard/overview?sector_id=1
+GET /api/dashboard/budget-allocation?sector_id=1
+GET /api/dashboard/project-status-distribution?sector_id=1
+GET /api/dashboard/monthly-progress?sector_id=1
+GET /api/dashboard/physical-financial-variance?sector_id=1
+GET /api/dashboard/budget-variance-heatmap?sector_id=1
+GET /api/dashboard/milestone-completion-tracker?sector_id=1
+GET /api/dashboard/target-achievement-kpi?sector_id=1
+GET /api/dashboard/cost-efficiency-metrics?sector_id=1
+GET /api/dashboard/risk-dashboard?sector_id=1
+GET /api/dashboard/beneficiary-impact-metrics?sector_id=1
+GET /api/dashboard/compliance-scorecard?sector_id=1
+GET /api/dashboard/early-warning-alerts?sector_id=1 -->

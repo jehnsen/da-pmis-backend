@@ -1,8 +1,8 @@
 {
 	"info": {
 		"_postman_id": "da-caraga-pmis-2025",
-		"name": "DA-CARAGA PMIS API",
-		"description": "Complete API collection for Department of Agriculture - CARAGA Region Performance Management Information System (PMIS)\n\n**Total Endpoints:** 140+\n**Authentication:** Laravel Sanctum (Token-based)\n**Updated:** 2026-01-29\n\n**Default Login:**\n- Username: admin\n- Password: Password123!\n\n**Base URL:** http://localhost:8000/api\n\n**How to Use:**\n1. Send a POST request to `/api/login` with your credentials\n2. The token will be automatically saved to `{{access_token}}` variable\n3. All authenticated requests will use this token automatically via Bearer authentication\n4. Use `/api/logout` to invalidate your current token\n\n**New Features:**\n- Password reset and change endpoints\n- 10 Critical Government Compliance Metrics (COA/DBM/NEDA)\n- Project Team Member Management\n- Project Milestone Tracking\n- Progress Report Image Management\n- Storage Statistics\n\n**Note:** All authenticated endpoints require a valid Bearer token in the Authorization header.",
+		"name": "Provincial LGU Governance Platform API - CARAGA",
+		"description": "Complete API collection for Provincial LGU Governance Intelligence Platform - CARAGA Region (Region XIII)\n\n**Total Endpoints:** 146+\n**Authentication:** Laravel Sanctum (Token-based)\n**Updated:** 2026-01-30\n\n**Default Login:**\n- Username: admin\n- Password: Password123!\n\n**Base URL:** http://localhost:8000/api\n\n**How to Use:**\n1. Send a POST request to `/api/login` with your credentials\n2. The token will be automatically saved to `{{access_token}}` variable\n3. All authenticated requests will use this token automatically via Bearer authentication\n4. Use `/api/logout` to invalidate your current token\n\n**New Features:**\n- **LGU Multi-Sector Governance (RA 7160)** - SS, ES, IEM, GPS sector management and filtering\n- Password reset and change endpoints\n- 10 Critical Government Compliance Metrics (COA/DBM/NEDA)\n- Project Team Member Management\n- Project Milestone Tracking\n- Progress Report Image Management\n- Storage Statistics\n- Sector-based filtering across all project and dashboard endpoints\n\n**Note:** All authenticated endpoints require a valid Bearer token in the Authorization header.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "12345678"
 	},
@@ -2123,6 +2123,129 @@
 							"path": ["api", "departments", "1", "kpi-summary"]
 						},
 						"description": "Get KPI summary for specific department"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "LGU Sectors",
+			"item": [
+				{
+					"name": "Get All Sectors",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sectors",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sectors"]
+						},
+						"description": "Get all active LGU sectors (SS, ES, IEM, GPS). Public endpoint - no authentication required."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Sectors (with statistics)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sectors?include_stats=true",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sectors"],
+							"query": [
+								{
+									"key": "include_stats",
+									"value": "true",
+									"description": "Include budget and project statistics"
+								}
+							]
+						},
+						"description": "Get all sectors with budget tracking, utilization rates, and project counts. Includes total_budget, total_disbursed, utilization_rate, projects_count, and approved_projects_count."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Sector by ID",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sectors/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sectors", "1"]
+						},
+						"description": "Get specific LGU sector details. Public endpoint - no authentication required."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Sector",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test Sector\",\n    \"code\": \"TS\",\n    \"description\": \"Test sector description\",\n    \"icon\": \"test-icon\",\n    \"color_code\": \"#FF5733\",\n    \"is_active\": true,\n    \"display_order\": 5\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/sectors",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sectors"]
+						},
+						"description": "Create new LGU sector. Requires authentication. Color code must be valid hex format (#RRGGBB)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Sector",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Sector Name\",\n    \"description\": \"Updated description\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/sectors/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sectors", "1"]
+						},
+						"description": "Update LGU sector. Requires authentication. All fields are optional."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Sector",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/sectors/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "sectors", "1"]
+						},
+						"description": "Delete LGU sector. Requires authentication."
 					},
 					"response": []
 				}

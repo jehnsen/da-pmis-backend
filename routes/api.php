@@ -21,6 +21,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ProjectTeamMemberController;
 use App\Http\Controllers\ProjectMilestoneController;
+use App\Http\Controllers\LguSectorController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -89,6 +90,10 @@ Route::prefix('locations')->group(function () {
     Route::get('/statistics', [LocationController::class, 'statistics']);
 });
 
+// LGU Sectors (Public access for filtering)
+Route::get('sectors', [LguSectorController::class, 'index']);
+Route::get('sectors/{sector}', [LguSectorController::class, 'show']);
+
 // Protected routes - authentication required
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
@@ -100,6 +105,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Departments (Internal only)
     Route::apiResource('departments', DepartmentController::class);
+
+    // LGU Sectors (CRUD - Internal only)
+    Route::post('sectors', [LguSectorController::class, 'store']);
+    Route::put('sectors/{sector}', [LguSectorController::class, 'update']);
+    Route::delete('sectors/{sector}', [LguSectorController::class, 'destroy']);
 
     // Projects (Full CRUD for authenticated users)
     Route::post('projects', [ProjectController::class, 'store']);

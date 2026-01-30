@@ -379,10 +379,24 @@ class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
             return Project::whereRaw('1 = 0')->paginate($perPage);
         }
 
-        return Project::where('approval_status', $pendingStatus)
-            ->with(['department', 'projectType', 'projectStatus', 'submitter'])
-            ->orderBy('submitted_at', 'asc')
-            ->paginate($perPage);
+        $query = Project::where('approval_status', $pendingStatus)
+            ->with(['department', 'projectType', 'projectStatus', 'submitter', 'municipality']);
+
+        // RA 7160 COMPLIANCE: Filter by territorial jurisdiction
+        // Municipal and Barangay officers can only see projects from their municipality
+        if ($level === 'municipal' || $level === 'barangay') {
+            if (!$user->municipality_id) {
+                // If user has no municipality assigned, return empty result
+                return Project::whereRaw('1 = 0')->paginate($perPage);
+            }
+            // Filter projects to only those within the user's municipality
+            $query->where('municipality_id', $user->municipality_id);
+        }
+
+        // Provincial (PPDO) and Governor levels see all projects in the province
+        // No additional filtering needed - they have province-wide jurisdiction
+
+        return $query->orderBy('submitted_at', 'asc')->paginate($perPage);
     }
 
     public function getApprovalHistory(int $projectId): array
@@ -473,7 +487,34 @@ class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
         // SECURITY FIX: Admins must follow proper approval workflow
         // They cannot skip levels to maintain audit trail integrity
         // Admins are mapped to 'regional' level and must wait for municipal/provincial approvals
-        return $userLevel === $projectLevel;
+        if ($userLevel !== $projectLevel) {
+            return false;
+        }
+
+        // RA 7160 COMPLIANCE: Territorial Jurisdiction Validation
+        // Municipal and Barangay officers can only approve projects within their municipality
+        if ($userLevel === 'municipal') {
+            // Municipal Planning and Development Officers (MPDO) can only approve
+            // projects within their municipality (RA 7160 Section 476)
+            if (!$user->municipality_id || !$project->municipality_id) {
+                return false; // Both user and project must have municipality assigned
+            }
+            return $user->municipality_id === $project->municipality_id;
+        }
+
+        if ($userLevel === 'barangay') {
+            // Barangay Development Council (BDC) officers can only approve
+            // projects within their municipality (RA 7160 Article X)
+            if (!$user->municipality_id || !$project->municipality_id) {
+                return false; // Both user and project must have municipality assigned
+            }
+            return $user->municipality_id === $project->municipality_id;
+            // Note: Future enhancement - add barangay-level validation when barangay_id is implemented
+        }
+
+        // Provincial (PPDO) and Governor levels have province-wide jurisdiction
+        // They can approve projects from any municipality within the province
+        return true;
     }
 
     public function getProjectsByApprovalStatus(string $status, int $perPage = 15)

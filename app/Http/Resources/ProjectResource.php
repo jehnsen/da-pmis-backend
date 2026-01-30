@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\LguSectorResource;
 
 class ProjectResource extends JsonResource
 {
@@ -13,6 +14,7 @@ class ProjectResource extends JsonResource
             'title' => $this->title,
             'description' => $this->when($this->shouldShowInternal(), $this->description, substr($this->description ?? '', 0, 200)),
             'department' => new DepartmentResource($this->whenLoaded('department')),
+            'sector' => new LguSectorResource($this->whenLoaded('sector')),
             'project_type' => $this->whenLoaded('projectType'),
             'project_status' => $this->whenLoaded('projectStatus'),
             'budget' => $this->budget,

@@ -16,7 +16,9 @@
       "Bash(composer update:*)",
       "Bash(dir /b appHttpRequestsProject)",
       "Bash(python3:*)",
-      "Bash(mysql:*)"
+      "Bash(mysql:*)",
+      "Bash(./vendor/bin/phpunit:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

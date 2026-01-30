@@ -21,7 +21,7 @@ class DashboardController extends Controller
     public function overview(Request $request): JsonResponse
     {
         try {
-            $filters = $request->only(['fiscal_year', 'department_id', 'region_id']);
+            $filters = $request->only(['fiscal_year', 'department_id', 'sector_id', 'region_id']);
             $data = $this->service->getOverview($filters);
 
             return ApiResponseClass::sendResponse($data, 'Dashboard overview retrieved successfully');
@@ -42,7 +42,7 @@ class DashboardController extends Controller
     public function budgetAllocation(Request $request): JsonResponse
     {
         try {
-            $filters = $request->only(['region_id', 'fiscal_year']);
+            $filters = $request->only(['region_id', 'sector_id', 'fiscal_year']);
             $data = $this->service->getBudgetAllocation($filters);
 
             return ApiResponseClass::sendResponse($data, 'Budget allocation data retrieved successfully');
@@ -63,7 +63,7 @@ class DashboardController extends Controller
     public function projectStatusDistribution(Request $request): JsonResponse
     {
         try {
-            $filters = $request->only(['fiscal_year', 'department_id']);
+            $filters = $request->only(['fiscal_year', 'department_id', 'sector_id']);
             $data = $this->service->getProjectStatusDistribution($filters);
 
             return ApiResponseClass::sendResponse($data, 'Project status distribution retrieved successfully');
@@ -128,7 +128,7 @@ class DashboardController extends Controller
     public function monthlyProgress(Request $request): JsonResponse
     {
         try {
-            $filters = $request->only(['year', 'department_id']);
+            $filters = $request->only(['year', 'department_id', 'sector_id']);
             $data = $this->service->getMonthlyProgress($filters);
 
             return ApiResponseClass::sendResponse($data, 'Monthly progress data retrieved successfully');
@@ -149,7 +149,7 @@ class DashboardController extends Controller
     public function physicalFinancialVariance(Request $request): JsonResponse
     {
         try {
-            $filters = $request->only(['fiscal_year', 'department_id', 'report_period', 'show_all', 'limit']);
+            $filters = $request->only(['fiscal_year', 'department_id', 'sector_id', 'report_period', 'show_all', 'limit']);
             $data = $this->service->getPhysicalFinancialVariance($filters);
 
             return ApiResponseClass::sendResponse($data, 'Physical vs financial variance data retrieved successfully');
@@ -170,7 +170,7 @@ class DashboardController extends Controller
     public function budgetVarianceHeatmap(Request $request): JsonResponse
     {
         try {
-            $filters = $request->only(['fiscal_year']);
+            $filters = $request->only(['fiscal_year', 'sector_id']);
             $data = $this->service->getBudgetVarianceHeatmap($filters);
 
             return ApiResponseClass::sendResponse($data, 'Budget variance heatmap retrieved successfully');
@@ -191,7 +191,7 @@ class DashboardController extends Controller
     public function milestoneCompletionTracker(Request $request): JsonResponse
     {
         try {
-            $filters = $request->only(['fiscal_year', 'department_id', 'quarter']);
+            $filters = $request->only(['fiscal_year', 'department_id', 'sector_id', 'quarter']);
             $data = $this->service->getMilestoneCompletionTracker($filters);
 
             return ApiResponseClass::sendResponse($data, 'Milestone completion tracker data retrieved successfully');
@@ -212,7 +212,7 @@ class DashboardController extends Controller
     public function targetAchievementKpi(Request $request): JsonResponse
     {
         try {
-            $filters = $request->only(['fiscal_year', 'department_id']);
+            $filters = $request->only(['fiscal_year', 'department_id', 'sector_id']);
             $data = $this->service->getTargetAchievementKpi($filters);
 
             return ApiResponseClass::sendResponse($data, 'Target vs achievement KPI data retrieved successfully');
@@ -233,7 +233,7 @@ class DashboardController extends Controller
     public function costEfficiencyMetrics(Request $request): JsonResponse
     {
         try {
-            $filters = $request->only(['fiscal_year']);
+            $filters = $request->only(['fiscal_year', 'sector_id']);
             $data = $this->service->getCostEfficiencyMetrics($filters);
 
             return ApiResponseClass::sendResponse($data, 'Cost efficiency metrics retrieved successfully');
@@ -254,7 +254,7 @@ class DashboardController extends Controller
     public function riskDashboard(Request $request): JsonResponse
     {
         try {
-            $filters = $request->only(['fiscal_year', 'department_id']);
+            $filters = $request->only(['fiscal_year', 'department_id', 'sector_id']);
             $data = $this->service->getRiskDashboard($filters);
 
             return ApiResponseClass::sendResponse($data, 'Risk dashboard data retrieved successfully');
@@ -275,7 +275,7 @@ class DashboardController extends Controller
     public function beneficiaryImpactMetrics(Request $request): JsonResponse
     {
         try {
-            $filters = $request->only(['fiscal_year']);
+            $filters = $request->only(['fiscal_year', 'sector_id']);
             $data = $this->service->getBeneficiaryImpactMetrics($filters);
 
             return ApiResponseClass::sendResponse($data, 'Beneficiary impact metrics retrieved successfully');
@@ -296,7 +296,7 @@ class DashboardController extends Controller
     public function complianceScorecard(Request $request): JsonResponse
     {
         try {
-            $filters = $request->only(['fiscal_year', 'department_id']);
+            $filters = $request->only(['fiscal_year', 'department_id', 'sector_id']);
             $data = $this->service->getComplianceScorecard($filters);
 
             return ApiResponseClass::sendResponse($data, 'Compliance scorecard retrieved successfully');
@@ -338,7 +338,7 @@ class DashboardController extends Controller
     public function earlyWarningAlerts(Request $request): JsonResponse
     {
         try {
-            $filters = $request->only(['fiscal_year']);
+            $filters = $request->only(['fiscal_year', 'sector_id']);
             $data = $this->service->getEarlyWarningAlerts($filters);
 
             return ApiResponseClass::sendResponse($data, 'Early warning alerts retrieved successfully');
