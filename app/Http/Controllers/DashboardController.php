@@ -35,21 +35,53 @@ class DashboardController extends Controller
     }
 
     /**
-     * Get budget allocation by region
+     * Get budget allocation by municipality (RA 7160 Compliant)
+     * Returns actual project budgets and disbursements per municipality
+     * Applies territorial jurisdiction for MPDO/Barangay officers
      *
-     * GET /api/dashboard/budget-allocation
+     * GET /api/dashboard/budget-allocation?sector_id=1&fiscal_year=2026
      */
     public function budgetAllocation(Request $request): JsonResponse
     {
         try {
-            $filters = $request->only(['region_id', 'sector_id', 'fiscal_year']);
-            $data = $this->service->getBudgetAllocation($filters);
+            $filters = $request->only(['sector_id', 'fiscal_year']);
 
-            return ApiResponseClass::sendResponse($data, 'Budget allocation data retrieved successfully');
+            // Apply RA 7160 territorial jurisdiction
+            $user = $request->user();
+
+            $data = $this->service->getBudgetAllocation($filters, $user);
+
+            return ApiResponseClass::sendResponse($data, 'Budget allocation by municipality retrieved successfully');
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve budget allocation data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get budget allocation by LGU sector (Provincial Overview)
+     * Shows budget distribution across all 4 sectors (SS, ES, IEM, GPS)
+     *
+     * GET /api/dashboard/budget-allocation-by-sector?fiscal_year=2026
+     */
+    public function budgetAllocationBySector(Request $request): JsonResponse
+    {
+        try {
+            $filters = $request->only(['fiscal_year']);
+
+            // Apply RA 7160 territorial jurisdiction
+            $user = $request->user();
+
+            $data = $this->service->getBudgetAllocationBySector($filters, $user);
+
+            return ApiResponseClass::sendResponse($data, 'Budget allocation by sector retrieved successfully');
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve budget allocation by sector',
                 'error' => $e->getMessage(),
             ], 500);
         }

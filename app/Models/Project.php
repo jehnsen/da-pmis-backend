@@ -170,6 +170,14 @@ class Project extends Model
     }
 
     /**
+     * Get progress reports for this project
+     */
+    public function progressReports(): HasMany
+    {
+        return $this->hasMany(ProgressReport::class)->orderBy('reporting_date', 'desc');
+    }
+
+    /**
      * Get audit logs for this project
      */
     public function auditLogs(): HasMany
@@ -258,6 +266,50 @@ class Project extends Model
     public function scopePendingAt($query, string $level)
     {
         return $query->where('approval_status', "pending_{$level}");
+    }
+
+    /**
+     * Scope for filtering projects by territorial jurisdiction (RA 7160 Compliance)
+     * Municipal and Barangay officers can only see projects within their municipality
+     * Provincial and Governor levels can see all projects
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param \App\Models\User|null $user
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeForUser($query, $user = null)
+    {
+        // If no user provided, return unfiltered (for public access)
+        if (!$user) {
+            return $query;
+        }
+
+        // If user has no role, return unfiltered
+        if (!$user->role) {
+            return $query;
+        }
+
+        $roleName = strtolower($user->role->name);
+
+        // Determine user's approval level for territorial jurisdiction
+        $isMunicipalLevel = str_contains($roleName, 'municipal') ||
+                           str_contains($roleName, 'mpdo') ||
+                           str_contains($roleName, 'barangay') ||
+                           str_contains($roleName, 'bdc');
+
+        // Municipal and Barangay level officers: filter by municipality
+        if ($isMunicipalLevel) {
+            if ($user->municipality_id) {
+                return $query->where('municipality_id', $user->municipality_id);
+            } else {
+                // User has municipal/barangay role but no municipality assigned
+                // Return empty result for security
+                return $query->whereRaw('1 = 0');
+            }
+        }
+
+        // Provincial, Governor, and Admin levels: can see all projects
+        return $query;
     }
 
     /**

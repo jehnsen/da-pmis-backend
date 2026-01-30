@@ -22,6 +22,7 @@ use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ProjectTeamMemberController;
 use App\Http\Controllers\ProjectMilestoneController;
 use App\Http\Controllers\LguSectorController;
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -57,6 +58,7 @@ Route::get('test', function () {
 Route::prefix('dashboard')->group(function () {
     Route::get('overview', [DashboardController::class, 'overview']);
     Route::get('budget-allocation', [DashboardController::class, 'budgetAllocation']);
+    Route::get('budget-allocation-by-sector', [DashboardController::class, 'budgetAllocationBySector']);
     Route::get('project-status-distribution', [DashboardController::class, 'projectStatusDistribution']);
     Route::get('national-performance', [DashboardController::class, 'nationalPerformance']);
     Route::get('recent-updates', [DashboardController::class, 'recentUpdates']);
@@ -98,7 +100,13 @@ Route::get('sectors/{sector}', [LguSectorController::class, 'show']);
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::get('/user', function (Request $request) {
-        return $request->user();
+        $user = $request->user()->load([
+            'role',
+            'department',
+            'municipality.province.region'
+        ]);
+
+        return new UserResource($user);
     });
     Route::post('logout', [AuthController::class, 'logout']);
     Route::post('password/change', [AuthController::class, 'changePassword']);

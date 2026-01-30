@@ -12,9 +12,9 @@ class ProjectService
     {
     }
 
-    public function list(int $perPage = 15, array $filters = []): LengthAwarePaginator|Collection
+    public function list(int $perPage = 15, array $filters = [], $user = null): LengthAwarePaginator|Collection
     {
-        return $this->repo->paginate($perPage, $filters);
+        return $this->repo->paginate($perPage, $filters, $user);
     }
 
     public function create(array $data)
@@ -22,19 +22,19 @@ class ProjectService
         return $this->repo->create($data);
     }
 
-    public function getById(int $id)
+    public function getById(int $id, $user = null)
     {
-        return $this->repo->find($id);
+        return $this->repo->find($id, $user);
     }
 
-    public function update(int $id, array $data)
+    public function update(int $id, array $data, $user = null)
     {
-        return $this->repo->update($id, $data);
+        return $this->repo->update($id, $data, $user);
     }
 
-    public function delete(int $id)
+    public function delete(int $id, $user = null)
     {
-        return $this->repo->delete($id);
+        return $this->repo->delete($id, $user);
     }
 
     public function getPublicProjects()

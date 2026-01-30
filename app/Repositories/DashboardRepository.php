@@ -64,8 +64,11 @@ class DashboardRepository implements DashboardRepositoryInterface
         $finishedProjects = $completedProjects;
         $successRate = $totalProjects > 0 ? round(($finishedProjects / $totalProjects) * 100, 0) : 0;
 
-        // Get unique regions covered
-        $regionsCovered = $this->region->count();
+        // Get unique municipalities covered by projects
+        $municipalitiesCovered = (clone $query)
+            ->distinct()
+            ->whereNotNull('municipality_id')
+            ->count('municipality_id');
 
         // Calculate funds spent percentage from funding distributions
         $totalAllocated = $this->fundingDistribution->sum('amount');
@@ -81,77 +84,197 @@ class DashboardRepository implements DashboardRepositoryInterface
             'on_track_projects' => $onTrackProjects,
             'active_projects' => $activeProjects,
             'beneficiaries' => $beneficiaries,
-            'regions_covered' => $regionsCovered,
+            'municipalities_covered' => $municipalitiesCovered,
             'funds_spent_percentage' => min($fundsSpentPercentage, 100),
         ];
     }
 
-    public function getBudgetAllocation(array $filters = []): array
+    /**
+     * Get budget allocation by municipality (RA 7160 Compliant)
+     * Returns actual project budgets and disbursements per municipality
+     * Supports territorial jurisdiction filtering for MPDO/Barangay officers
+     *
+     * @param array $filters - fiscal_year, sector_id
+     * @param mixed $user - Authenticated user for territorial jurisdiction
+     * @return array
+     */
+    public function getBudgetAllocation(array $filters = [], $user = null): array
     {
-        $query = $this->fundingDistribution->query()
+        // Build query for projects grouped by municipality
+        $query = $this->project->query()
             ->select(
-                'regions.name as region',
-                'regions.code as region_code',
-                DB::raw('SUM(funding_distributions.amount) as allocated_budget')
+                'municipalities.id as municipality_id',
+                'municipalities.name as municipality',
+                'municipalities.type as municipality_type',
+                DB::raw('COUNT(projects.id) as project_count'),
+                DB::raw('SUM(projects.budget) as allocated_budget')
             )
-            ->join('departments', 'funding_distributions.department_id', '=', 'departments.id')
-            ->join('regions', function ($join) {
-                // Join regions through projects if available
-                $join->on(DB::raw('1'), '=', DB::raw('1'));
-            })
-            ->groupBy('regions.id', 'regions.name', 'regions.code');
+            ->leftJoin('municipalities', 'projects.municipality_id', '=', 'municipalities.id')
+            ->whereNotNull('projects.municipality_id'); // Only include projects with assigned municipality
 
-        if (isset($filters['fiscal_year'])) {
-            $query->where('funding_distributions.fiscal_year', $filters['fiscal_year']);
+        // Apply RA 7160 territorial jurisdiction filtering
+        if ($user) {
+            $query->forUser($user);
         }
 
-        // Alternative approach: Group by region from projects
-        $projectBudgets = $this->project->query()
-            ->select(
-                'regions.name as region',
-                'regions.code as region_code',
-                DB::raw('SUM(projects.budget) as allocated_budget'),
-                DB::raw('SUM(CASE WHEN project_statuses.name = "Completed" THEN projects.budget ELSE projects.budget * 0.5 END) as spent_budget')
-            )
-            ->leftJoin('regions', function ($join) {
-                // Projects may have region_id or we derive from location
-                $join->on(DB::raw('1'), '=', DB::raw('1'));
-            })
-            ->leftJoin('project_statuses', 'projects.project_status_id', '=', 'project_statuses.id')
-            ->groupBy('regions.id', 'regions.name', 'regions.code');
-
+        // Apply fiscal year filter
         if (isset($filters['fiscal_year'])) {
-            $projectBudgets->whereYear('projects.start_date', $filters['fiscal_year']);
+            $query->whereYear('projects.start_date', $filters['fiscal_year']);
         }
 
+        // Apply sector filter
         if (isset($filters['sector_id'])) {
-            $projectBudgets->where('projects.sector_id', $filters['sector_id']);
+            $query->where('projects.sector_id', $filters['sector_id']);
         }
 
-        // Get regions with their budget data
-        $regions = $this->region->all();
-        $result = [];
+        // Group by municipality
+        $query->groupBy('municipalities.id', 'municipalities.name', 'municipalities.type')
+            ->orderBy('allocated_budget', 'desc');
 
-        foreach ($regions as $region) {
-            $regionProjects = $this->project->query();
+        $municipalities = $query->get();
+
+        // Calculate actual spent budget using project_disbursements join
+        $result = [];
+        foreach ($municipalities as $muni) {
+            // Get actual disbursements for this municipality's projects
+            $projectIds = $this->project->query()
+                ->forUser($user)
+                ->where('municipality_id', $muni->municipality_id);
 
             if (isset($filters['fiscal_year'])) {
-                $regionProjects->whereYear('start_date', $filters['fiscal_year']);
+                $projectIds->whereYear('start_date', $filters['fiscal_year']);
             }
 
-            $allocatedBudget = $regionProjects->sum('budget') / max($regions->count(), 1);
-            $spentBudget = $allocatedBudget * (rand(50, 90) / 100); // Simulated spend ratio
+            if (isset($filters['sector_id'])) {
+                $projectIds->where('sector_id', $filters['sector_id']);
+            }
+
+            $projectIds = $projectIds->pluck('id');
+
+            $actualSpent = DB::table('project_disbursements')
+                ->whereIn('project_id', $projectIds)
+                ->where('status', 'completed')
+                ->sum('amount');
+
+            $allocatedBudget = (float) $muni->allocated_budget;
+            $spentBudget = (float) $actualSpent;
+            $utilizationRate = $allocatedBudget > 0 ? round(($spentBudget / $allocatedBudget) * 100, 0) : 0;
 
             $result[] = [
-                'region' => $region->name,
-                'region_code' => $region->code,
-                'allocated_budget' => round($allocatedBudget, 2),
-                'spent_budget' => round($spentBudget, 2),
-                'utilization_rate' => $allocatedBudget > 0 ? round(($spentBudget / $allocatedBudget) * 100, 0) : 0,
+                'municipality_id' => $muni->municipality_id,
+                'municipality' => $muni->municipality ?? 'Unassigned',
+                'municipality_type' => $muni->municipality_type,
+                'project_count' => $muni->project_count,
+                'allocated_budget' => $allocatedBudget,
+                'spent_budget' => $spentBudget,
+                'remaining_budget' => $allocatedBudget - $spentBudget,
+                'utilization_rate' => $utilizationRate,
             ];
         }
 
-        return $result;
+        // Calculate summary statistics
+        $totalAllocated = array_sum(array_column($result, 'allocated_budget'));
+        $totalSpent = array_sum(array_column($result, 'spent_budget'));
+        $overallUtilization = $totalAllocated > 0 ? round(($totalSpent / $totalAllocated) * 100, 1) : 0;
+
+        return [
+            'municipalities' => $result,
+            'summary' => [
+                'total_municipalities' => count($result),
+                'total_allocated' => $totalAllocated,
+                'total_spent' => $totalSpent,
+                'total_remaining' => $totalAllocated - $totalSpent,
+                'overall_utilization' => $overallUtilization,
+            ],
+        ];
+    }
+
+    /**
+     * Get budget allocation by sector (Provincial Overview)
+     * Shows budget distribution across all 4 LGU sectors (SS, ES, IEM, GPS)
+     *
+     * @param array $filters - fiscal_year
+     * @param mixed $user - Authenticated user for territorial jurisdiction
+     * @return array
+     */
+    public function getBudgetAllocationBySector(array $filters = [], $user = null): array
+    {
+        // Build query for projects grouped by sector
+        $query = $this->project->query()
+            ->select(
+                'lgu_sectors.id as sector_id',
+                'lgu_sectors.name as sector',
+                'lgu_sectors.code as sector_code',
+                DB::raw('COUNT(projects.id) as project_count'),
+                DB::raw('SUM(projects.budget) as allocated_budget')
+            )
+            ->leftJoin('lgu_sectors', 'projects.sector_id', '=', 'lgu_sectors.id');
+
+        // Apply RA 7160 territorial jurisdiction filtering
+        if ($user) {
+            $query->forUser($user);
+        }
+
+        // Apply fiscal year filter
+        if (isset($filters['fiscal_year'])) {
+            $query->whereYear('projects.start_date', $filters['fiscal_year']);
+        }
+
+        // Group by sector
+        $query->groupBy('lgu_sectors.id', 'lgu_sectors.name', 'lgu_sectors.code')
+            ->orderBy('allocated_budget', 'desc');
+
+        $sectors = $query->get();
+
+        // Calculate actual disbursements per sector
+        $result = [];
+        foreach ($sectors as $sector) {
+            $projectIds = $this->project->query()
+                ->forUser($user)
+                ->where('sector_id', $sector->sector_id);
+
+            if (isset($filters['fiscal_year'])) {
+                $projectIds->whereYear('start_date', $filters['fiscal_year']);
+            }
+
+            $projectIds = $projectIds->pluck('id');
+
+            $actualSpent = DB::table('project_disbursements')
+                ->whereIn('project_id', $projectIds)
+                ->where('status', 'completed')
+                ->sum('amount');
+
+            $allocatedBudget = (float) $sector->allocated_budget;
+            $spentBudget = (float) $actualSpent;
+            $utilizationRate = $allocatedBudget > 0 ? round(($spentBudget / $allocatedBudget) * 100, 0) : 0;
+
+            $result[] = [
+                'sector_id' => $sector->sector_id,
+                'sector' => $sector->sector ?? 'Unassigned',
+                'sector_code' => $sector->sector_code,
+                'project_count' => $sector->project_count,
+                'allocated_budget' => $allocatedBudget,
+                'spent_budget' => $spentBudget,
+                'remaining_budget' => $allocatedBudget - $spentBudget,
+                'utilization_rate' => $utilizationRate,
+            ];
+        }
+
+        // Calculate summary statistics
+        $totalAllocated = array_sum(array_column($result, 'allocated_budget'));
+        $totalSpent = array_sum(array_column($result, 'spent_budget'));
+        $overallUtilization = $totalAllocated > 0 ? round(($totalSpent / $totalAllocated) * 100, 1) : 0;
+
+        return [
+            'sectors' => $result,
+            'summary' => [
+                'total_sectors' => count($result),
+                'total_allocated' => $totalAllocated,
+                'total_spent' => $totalSpent,
+                'total_remaining' => $totalAllocated - $totalSpent,
+                'overall_utilization' => $overallUtilization,
+            ],
+        ];
     }
 
     public function getProjectStatusDistribution(array $filters = []): array

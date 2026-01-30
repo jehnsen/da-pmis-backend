@@ -46,7 +46,9 @@ class ProjectController extends Controller
         // Remove null/empty values for cleaner filters_applied
         $appliedFilters = array_filter($filters, fn ($value) => $value !== null && $value !== '');
 
-        $data = $this->service->list($perPage, $filters);
+        // Apply RA 7160 territorial jurisdiction for authenticated users
+        $user = $request->user();
+        $data = $this->service->list($perPage, $filters, $user);
 
         // Return with filters_applied metadata
         return ProjectResource::collection($data)->additional([
@@ -66,9 +68,11 @@ class ProjectController extends Controller
         }
     }
 
-    public function show(int $project): ProjectResource
+    public function show(Request $request, int $project): ProjectResource
     {
-        $proj = $this->service->getById($project);
+        // Apply RA 7160 territorial jurisdiction for authenticated users
+        $user = $request->user();
+        $proj = $this->service->getById($project, $user);
         abort_unless($proj, 404);
         return new ProjectResource($proj->load([
             'department',
@@ -83,7 +87,16 @@ class ProjectController extends Controller
     public function update(UpdateProjectRequest $request, int $project): JsonResponse
     {
         try {
-            $proj = $this->service->update($project, $request->validated());
+            // Apply RA 7160 territorial jurisdiction for authenticated users
+            $user = $request->user();
+            $proj = $this->service->update($project, $request->validated(), $user);
+
+            if (!$proj) {
+                return response()->json([
+                    'message' => 'Project not found or you do not have permission to update this project'
+                ], 404);
+            }
+
             return (new ProjectResource($proj->load(['department', 'projectType', 'projectStatus'])))
                 ->response();
         } catch (\Exception $e) {
@@ -91,10 +104,23 @@ class ProjectController extends Controller
         }
     }
 
-    public function destroy(int $project): JsonResponse
+    public function destroy(Request $request, int $project): JsonResponse
     {
-        abort_unless($this->service->delete($project), 404);
-        return response()->json(['message' => 'Project deleted successfully']);
+        try {
+            // Apply RA 7160 territorial jurisdiction for authenticated users
+            $user = $request->user();
+            $deleted = $this->service->delete($project, $user);
+
+            if (!$deleted) {
+                return response()->json([
+                    'message' => 'Project not found or you do not have permission to delete this project'
+                ], 404);
+            }
+
+            return response()->json(['message' => 'Project deleted successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to delete project', 'error' => $e->getMessage()], 500);
+        }
     }
 
     /**

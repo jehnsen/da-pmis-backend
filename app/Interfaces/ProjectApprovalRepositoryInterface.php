@@ -55,7 +55,7 @@ interface ProjectApprovalRepositoryInterface
     /**
      * Get all projects with a specific approval status
      */
-    public function getProjectsByApprovalStatus(string $status, int $perPage = 15);
+    public function getProjectsByApprovalStatus(string $status, int $perPage = 15, $user = null);
 
     /**
      * Get approval statistics

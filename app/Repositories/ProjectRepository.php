@@ -37,9 +37,11 @@ class ProjectRepository implements ProjectRepositoryInterface
         return $query->get();
     }
 
-    public function paginate(int $perPage = 15, array $filters = [])
+    public function paginate(int $perPage = 15, array $filters = [], $user = null)
     {
-        $query = $this->model->query()->with(['department', 'sector', 'projectType', 'projectStatus']);
+        $query = $this->model->query()
+            ->with(['department', 'sector', 'projectType', 'projectStatus'])
+            ->forUser($user); // Apply RA 7160 territorial jurisdiction filtering
 
         // Search across multiple fields
         if (! empty($filters['search'])) {
@@ -124,9 +126,13 @@ class ProjectRepository implements ProjectRepositoryInterface
         return $query->paginate($perPage);
     }
 
-    public function find($id)
+    public function find($id, $user = null)
     {
-        return $this->model->with(['department', 'sector', 'projectType', 'projectStatus', 'teamMembers', 'milestones'])->find($id);
+        $query = $this->model->query()
+            ->with(['department', 'sector', 'projectType', 'projectStatus', 'teamMembers', 'milestones'])
+            ->forUser($user); // Apply RA 7160 territorial jurisdiction filtering
+
+        return $query->find($id);
     }
 
     public function create(array $data)
@@ -134,42 +140,80 @@ class ProjectRepository implements ProjectRepositoryInterface
         return $this->model->create($data);
     }
 
-    public function update($id, array $data)
+    public function update($id, array $data, $user = null)
     {
-        $project = $this->find($id);
-        if ($project) {
-            // Prevent editing projects that are in the approval workflow
-            if ($project->isPendingApproval()) {
-                throw new \Exception(
-                    'Cannot edit project while it is pending approval. ' .
-                    'Current status: ' . $project->approval_status_display . '. ' .
-                    'Please wait for approval to complete or request the project to be sent back to draft.'
-                );
-            }
+        $project = $this->find($id, $user); // Apply territorial jurisdiction check
 
-            // Prevent editing approved projects without proper workflow
-            if ($project->isApproved()) {
-                throw new \Exception(
-                    'Cannot edit approved project. ' .
-                    'Approved projects are locked to maintain audit trail integrity. ' .
-                    'Please contact an administrator if changes are needed.'
-                );
-            }
-
-            $project->update($data);
-            return $project->fresh();
+        if (!$project) {
+            // Project not found or user doesn't have access due to territorial jurisdiction
+            return null;
         }
-        return null;
+
+        // RA 7160 Territorial Jurisdiction Validation
+        if ($user && $user->municipality_id) {
+            $roleName = strtolower($user->role->name ?? '');
+            $isMunicipalLevel = str_contains($roleName, 'municipal') ||
+                               str_contains($roleName, 'mpdo') ||
+                               str_contains($roleName, 'barangay') ||
+                               str_contains($roleName, 'bdc');
+
+            if ($isMunicipalLevel && $project->municipality_id !== $user->municipality_id) {
+                throw new \Exception(
+                    'Access denied: You can only modify projects within your municipality. ' .
+                    'This project belongs to a different municipality (RA 7160 territorial jurisdiction).'
+                );
+            }
+        }
+
+        // Prevent editing projects that are in the approval workflow
+        if ($project->isPendingApproval()) {
+            throw new \Exception(
+                'Cannot edit project while it is pending approval. ' .
+                'Current status: ' . $project->approval_status_display . '. ' .
+                'Please wait for approval to complete or request the project to be sent back to draft.'
+            );
+        }
+
+        // Prevent editing approved projects without proper workflow
+        if ($project->isApproved()) {
+            throw new \Exception(
+                'Cannot edit approved project. ' .
+                'Approved projects are locked to maintain audit trail integrity. ' .
+                'Please contact an administrator if changes are needed.'
+            );
+        }
+
+        $project->update($data);
+        return $project->fresh();
     }
 
-    public function delete($id)
+    public function delete($id, $user = null)
     {
-        $project = $this->find($id);
-        if ($project) {
-            $project->delete();
-            return $project;
+        $project = $this->find($id, $user); // Apply territorial jurisdiction check
+
+        if (!$project) {
+            // Project not found or user doesn't have access due to territorial jurisdiction
+            return null;
         }
-        return null;
+
+        // RA 7160 Territorial Jurisdiction Validation
+        if ($user && $user->municipality_id) {
+            $roleName = strtolower($user->role->name ?? '');
+            $isMunicipalLevel = str_contains($roleName, 'municipal') ||
+                               str_contains($roleName, 'mpdo') ||
+                               str_contains($roleName, 'barangay') ||
+                               str_contains($roleName, 'bdc');
+
+            if ($isMunicipalLevel && $project->municipality_id !== $user->municipality_id) {
+                throw new \Exception(
+                    'Access denied: You can only delete projects within your municipality. ' .
+                    'This project belongs to a different municipality (RA 7160 territorial jurisdiction).'
+                );
+            }
+        }
+
+        $project->delete();
+        return $project;
     }
 
     public function withRelations($id, array $relations = [])

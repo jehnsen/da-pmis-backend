@@ -517,12 +517,13 @@ class ProjectApprovalRepository implements ProjectApprovalRepositoryInterface
         return true;
     }
 
-    public function getProjectsByApprovalStatus(string $status, int $perPage = 15)
+    public function getProjectsByApprovalStatus(string $status, int $perPage = 15, $user = null)
     {
-        return Project::where('approval_status', $status)
-            ->with(['department', 'projectType', 'projectStatus', 'submitter'])
-            ->orderBy('updated_at', 'desc')
-            ->paginate($perPage);
+        $query = Project::where('approval_status', $status)
+            ->with(['department', 'projectType', 'projectStatus', 'submitter', 'municipality'])
+            ->forUser($user); // Apply RA 7160 territorial jurisdiction filtering
+
+        return $query->orderBy('updated_at', 'desc')->paginate($perPage);
     }
 
     public function getApprovalStatistics(): array

@@ -6,7 +6,9 @@ interface DashboardRepositoryInterface
 {
     public function getOverviewStats(array $filters = []): array;
 
-    public function getBudgetAllocation(array $filters = []): array;
+    public function getBudgetAllocation(array $filters = [], $user = null): array;
+
+    public function getBudgetAllocationBySector(array $filters = [], $user = null): array;
 
     public function getProjectStatusDistribution(array $filters = []): array;
 

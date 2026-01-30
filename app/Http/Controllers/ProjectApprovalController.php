@@ -229,11 +229,14 @@ class ProjectApprovalController extends Controller
     {
         try {
             $request->validate([
-                'status' => ['required', 'string', 'in:draft,pending_municipal,pending_provincial,pending_regional,approved,rejected'],
+                'status' => ['required', 'string', 'in:draft,pending_barangay,pending_municipal,pending_provincial,pending_governor,approved,rejected'],
             ]);
 
             $perPage = (int) $request->query('per_page', 15);
-            $projects = $this->service->getProjectsByApprovalStatus($request->status, $perPage);
+
+            // Apply RA 7160 territorial jurisdiction for authenticated users
+            $user = $request->user();
+            $projects = $this->service->getProjectsByApprovalStatus($request->status, $perPage, $user);
 
             return ProjectResource::collection($projects)->response();
         } catch (\Exception $e) {

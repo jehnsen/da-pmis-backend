@@ -30,6 +30,24 @@ class UserResource extends JsonResource
                 ];
             }),
             'department_id' => $this->department_id,
+            'municipality' => $this->whenLoaded('municipality', function () {
+                return [
+                    'id' => $this->municipality->id,
+                    'name' => $this->municipality->name,
+                    'type' => $this->municipality->type,
+                    'type_display' => $this->municipality->type_display,
+                    'province' => $this->municipality->province ? [
+                        'id' => $this->municipality->province->id,
+                        'name' => $this->municipality->province->name,
+                        'region' => $this->municipality->province->region ? [
+                            'id' => $this->municipality->province->region->id,
+                            'name' => $this->municipality->province->region->name,
+                            'code' => $this->municipality->province->region->code,
+                        ] : null,
+                    ] : null,
+                ];
+            }),
+            'municipality_id' => $this->municipality_id,
             'is_active' => $this->is_active ?? true,
             'last_login_at' => $this->last_login_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),

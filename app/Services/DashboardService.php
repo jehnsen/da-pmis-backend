@@ -15,9 +15,14 @@ class DashboardService
         return $this->repo->getOverviewStats($filters);
     }
 
-    public function getBudgetAllocation(array $filters = []): array
+    public function getBudgetAllocation(array $filters = [], $user = null): array
     {
-        return $this->repo->getBudgetAllocation($filters);
+        return $this->repo->getBudgetAllocation($filters, $user);
+    }
+
+    public function getBudgetAllocationBySector(array $filters = [], $user = null): array
+    {
+        return $this->repo->getBudgetAllocationBySector($filters, $user);
     }
 
     public function getProjectStatusDistribution(array $filters = []): array

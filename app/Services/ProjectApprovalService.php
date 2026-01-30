@@ -243,9 +243,9 @@ class ProjectApprovalService
     /**
      * Get projects by approval status
      */
-    public function getProjectsByApprovalStatus(string $status, int $perPage = 15)
+    public function getProjectsByApprovalStatus(string $status, int $perPage = 15, $user = null)
     {
-        return $this->repository->getProjectsByApprovalStatus($status, $perPage);
+        return $this->repository->getProjectsByApprovalStatus($status, $perPage, $user);
     }
 
     /**

@@ -18,7 +18,8 @@
       "Bash(python3:*)",
       "Bash(mysql:*)",
       "Bash(./vendor/bin/phpunit:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
