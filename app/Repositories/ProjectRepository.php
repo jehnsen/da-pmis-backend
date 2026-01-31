@@ -60,9 +60,18 @@ class ProjectRepository implements ProjectRepositoryInterface
             $query->where('department_id', $filters['department_id']);
         }
 
-        // Sector filter
+        // Sector filter (supports both ID and code/name lookup)
         if (isset($filters['sector_id'])) {
             $query->where('sector_id', $filters['sector_id']);
+        } elseif (isset($filters['sector'])) {
+            // Support filtering by sector code (ES, SS, IEM, GPS) or name
+            $sectorValue = $filters['sector'];
+            $query->whereHas('sector', function ($q) use ($sectorValue) {
+                $q->where(function ($sq) use ($sectorValue) {
+                    $sq->where('code', strtoupper($sectorValue))
+                       ->orWhere('name', 'LIKE', "%{$sectorValue}%");
+                });
+            });
         }
 
         // Project type filter (also accept category_id)

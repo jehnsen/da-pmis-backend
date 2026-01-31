@@ -19,7 +19,8 @@
       "Bash(mysql:*)",
       "Bash(./vendor/bin/phpunit:*)",
       "Bash(findstr:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

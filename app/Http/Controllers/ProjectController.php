@@ -24,6 +24,7 @@ class ProjectController extends Controller
             'search',
             'department_id',
             'sector_id',
+            'sector', // Support sector code/name lookup (e.g., sector=ES or sector=economic)
             'project_type_id',
             'project_status_id',
             'category_id',

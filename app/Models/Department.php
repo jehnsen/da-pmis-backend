@@ -4,17 +4,26 @@ namespace App\Models;
 
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Department extends Model
 {
     use Auditable;
-    protected $fillable = ['name', 'description'];
+    protected $fillable = ['name', 'description', 'sector_id'];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Get the sector this department belongs to
+     */
+    public function sector(): BelongsTo
+    {
+        return $this->belongsTo(LguSector::class, 'sector_id');
+    }
 
     /**
      * Get projects under this department

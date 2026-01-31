@@ -22,6 +22,7 @@ use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ProjectTeamMemberController;
 use App\Http\Controllers\ProjectMilestoneController;
 use App\Http\Controllers\LguSectorController;
+use App\Http\Controllers\LguSectorReportController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -77,6 +78,18 @@ Route::prefix('dashboard')->group(function () {
     Route::get('compliance-scorecard', [DashboardController::class, 'complianceScorecard']);
     Route::get('year-over-year-trends', [DashboardController::class, 'yearOverYearTrends']);
     Route::get('early-warning-alerts', [DashboardController::class, 'earlyWarningAlerts']);
+});
+
+// LGU Sectors (RA 7160) - Public for transparency
+Route::prefix('lgu-sectors')->group(function () {
+    Route::get('/', [LguSectorReportController::class, 'index']); // List all sectors with stats
+    Route::get('/reports', [LguSectorReportController::class, 'index']); // Alias
+    Route::get('/budget-utilization', [LguSectorReportController::class, 'budgetUtilization']);
+    Route::get('/compare', [LguSectorReportController::class, 'compare']);
+    Route::get('/{sector}/monthly-progress', [LguSectorReportController::class, 'monthlyProgress']);
+    Route::get('/{sector}/performance-summary', [LguSectorReportController::class, 'performanceSummary']);
+    Route::get('/{sector}/departments', [LguSectorReportController::class, 'getDepartments']);
+    Route::get('/{sector}/departments-overview', [LguSectorReportController::class, 'departmentsOverview']);
 });
 
 // Location Management (Public endpoints for filtering)

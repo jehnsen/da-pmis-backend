@@ -42,6 +42,14 @@ class LguSector extends Model
     }
 
     /**
+     * Get departments under this sector
+     */
+    public function departments(): HasMany
+    {
+        return $this->hasMany(Department::class, 'sector_id');
+    }
+
+    /**
      * Scope for active sectors
      */
     public function scopeActive($query)

@@ -18,3 +18,4 @@ select p.title, s.id, s.name from projects p
 inner join lgu_sectors s on p.sector_id = s.id
 inner join municipalities m on p.municipality_id = m.id
 inner join provinces pr on p.province_id = pr.id
+

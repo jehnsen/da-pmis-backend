@@ -28,6 +28,7 @@ class DocumentController extends Controller
             'category',
             'category_id',
             'department_id',
+            'project_id',
             'fiscal_year',
             'is_featured',
             'sort_by',

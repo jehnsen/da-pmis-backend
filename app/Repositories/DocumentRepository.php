@@ -70,6 +70,11 @@ class DocumentRepository implements DocumentRepositoryInterface
             $query->where('department_id', $filters['department_id']);
         }
 
+        // Project filter
+        if (isset($filters['project_id'])) {
+            $query->where('project_id', $filters['project_id']);
+        }
+
         // Fiscal year filter
         if (isset($filters['fiscal_year'])) {
             $query->where('fiscal_year', $filters['fiscal_year']);
